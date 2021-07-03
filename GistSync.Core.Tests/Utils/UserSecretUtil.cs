@@ -9,7 +9,7 @@ namespace GistSync.Core.Tests.Utils
         static UserSecretUtil()
         {
             var configurationBuilder = new ConfigurationBuilder();
-            configurationBuilder.AddUserSecrets(typeof(UserSecretUtil).Assembly);
+            configurationBuilder.AddUserSecrets(typeof(UserSecretUtil).Assembly, true);
             Configuration = configurationBuilder.Build();
         }
     }
