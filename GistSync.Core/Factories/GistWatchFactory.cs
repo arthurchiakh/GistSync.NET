@@ -1,8 +1,9 @@
-﻿using GistSync.Core.Models;
+﻿using GistSync.Core.Factories.Contracts;
+using GistSync.Core.Models;
 
 namespace GistSync.Core.Factories
 {
-    public class GistWatchFactory
+    public class GistWatchFactory : IGistWatchFactory
     {
         public GistWatch Create(string gistId, string personalAccessToken = null)
         {

@@ -2,6 +2,6 @@
 {
     public class Constants
     {
-        public const string AppName = "WinGist";
+        public const string AppName = "GistSync.NET";
     }
 }

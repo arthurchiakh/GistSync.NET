@@ -7,16 +7,13 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using GistSync.Core.Models.GitHub;
+using GistSync.Core.Services.Contracts;
 
 namespace GistSync.Core.Services
-{
-    public class GitHubApiService
+{ 
+    public class GitHubApiService : IGitHubApiService
     {
         public const string GITHUB_API_URL = "https://api.github.com/";
-
-        public GitHubApiService()
-        {
-        }
 
         private HttpClient ConstructHttpClient(string personalAccessToken = null)
         {

@@ -2,7 +2,6 @@
 using System.IO;
 using System.IO.Abstractions;
 using GistSync.Core.Services.Contracts;
-using Microsoft.VisualBasic;
 using FileSystem = System.IO.Abstractions.FileSystem;
 
 namespace GistSync.Core.Services
@@ -13,7 +12,7 @@ namespace GistSync.Core.Services
         private IFileSystem _fileSystem { get; }
         private string _localAppDataDirectory { get; }
 
-        internal WindowsAppDataService(IFileSystem fileSystem, string localAppDataDirectory)
+        internal WindowsAppDataService(IFileSystem fileSystem, string localAppDataDirectory = null)
         {
             _fileSystem = fileSystem;
             _localAppDataDirectory = localAppDataDirectory;
@@ -38,11 +37,11 @@ namespace GistSync.Core.Services
             if (_fileSystem.Directory.Exists(AppFolderPath)) _fileSystem.Directory.Delete(AppFolderPath);
         }
 
-        public string GetRelativePath(params string[] paths)
+        public string GetAbsolutePath(params string[] relativeFilePaths)
         {
-            var combinePaths = new string[paths.Length + 1];
+            var combinePaths = new string[relativeFilePaths.Length + 1];
             combinePaths[0] = AppFolderPath;
-            Array.Copy(paths, 0, combinePaths, 1, paths.Length);
+            Array.Copy(relativeFilePaths, 0, combinePaths, 1, relativeFilePaths.Length);
 
             return Path.Combine(combinePaths);
         }

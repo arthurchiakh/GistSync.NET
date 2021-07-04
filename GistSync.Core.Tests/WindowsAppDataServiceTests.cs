@@ -9,7 +9,7 @@ namespace GistSync.Core.Tests
 {
     public class WindowsAppDataServiceTests
     {
-        private WindowsAppDataService _localAppDataService;
+        private WindowsAppDataService _windowsAppDataService;
         private static string _localAppDataDirectory = @"C:\Users\Arthur\AppData\Local";
         private static string _appFolderPath = Path.Combine(@"C:\Users\Arthur\AppData\Local\", Constants.AppName);
         private IFileSystem _fileSystem;
@@ -20,19 +20,19 @@ namespace GistSync.Core.Tests
             _fileSystem = new MockFileSystem();
             _fileSystem.Directory.CreateDirectory(_localAppDataDirectory);
 
-            _localAppDataService = new WindowsAppDataService(_fileSystem, _localAppDataDirectory);
+            _windowsAppDataService = new WindowsAppDataService(_fileSystem, _localAppDataDirectory);
         }
 
         [Test]
         public void WindowsAppDataService_DirectoryMatch()
         {
-            Assert.AreEqual(_appFolderPath, _localAppDataService.AppFolderPath);
+            Assert.AreEqual(_appFolderPath, _windowsAppDataService.AppFolderPath);
         }
 
         [Test]
         public void WindowsAppDataService_CreateDirectory_PreviouslyNotExists()
         {
-            _localAppDataService.CreateAppDirectory();
+            _windowsAppDataService.CreateAppDirectory();
             Assert.True(_fileSystem.Directory.Exists(_appFolderPath));
         }
 
@@ -40,7 +40,7 @@ namespace GistSync.Core.Tests
         public void WindowsAppDataService_CreateDirectory_PreviouslyExists()
         {
             _fileSystem.Directory.CreateDirectory(_appFolderPath);
-            _localAppDataService.CreateAppDirectory();
+            _windowsAppDataService.CreateAppDirectory();
             Assert.True(_fileSystem.Directory.Exists(_appFolderPath));
         }
 
@@ -48,21 +48,21 @@ namespace GistSync.Core.Tests
         public void WindowsAppDataService_DeleteDirectory_PreviouslyExists()
         {
             _fileSystem.Directory.CreateDirectory(_appFolderPath);
-            _localAppDataService.DeleteAppDirectory();
+            _windowsAppDataService.DeleteAppDirectory();
             Assert.False(_fileSystem.Directory.Exists(_appFolderPath));
         }
 
         [Test]
         public void WindowsAppDataService_DeleteDirectory_PreviouslyNotExists()
         {
-            _localAppDataService.DeleteAppDirectory();
+            _windowsAppDataService.DeleteAppDirectory();
             Assert.False(_fileSystem.Directory.Exists(_appFolderPath));
         }
 
         [TestCaseSource(nameof(_windowsAppDataServiceGetRelativePathReturnExpectedTestCases))]
         public void WindowsAppDataService_GetRelativePath_ReturnExpected(string[] sections, string expected)
         {
-            Assert.AreEqual(expected, _localAppDataService.GetRelativePath(sections));
+            Assert.AreEqual(expected, _windowsAppDataService.GetAbsolutePath(sections));
         }
 
         private static IEnumerable<TestCaseData> _windowsAppDataServiceGetRelativePathReturnExpectedTestCases = new[]

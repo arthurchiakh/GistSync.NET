@@ -13,8 +13,8 @@
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="paths"></param>
+        /// <param name="relativeFilePaths"></param>
         /// <returns></returns>
-        string GetRelativePath(params string[] paths);
+        string GetAbsolutePath(params string[] relativeFilePaths);
     }
 }
