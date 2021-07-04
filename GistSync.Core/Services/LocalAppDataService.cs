@@ -6,24 +6,25 @@ using FileSystem = System.IO.Abstractions.FileSystem;
 
 namespace GistSync.Core.Services
 {
-    public class WindowsAppDataService : IAppDataService
+    public class LocalAppDataService : IAppDataService
     {
         public string AppFolderPath { get; }
         private IFileSystem _fileSystem { get; }
         private string _localAppDataDirectory { get; }
 
-        internal WindowsAppDataService(IFileSystem fileSystem, string localAppDataDirectory = null)
+        internal LocalAppDataService(IFileSystem fileSystem, string localAppDataDirectory = null)
         {
             _fileSystem = fileSystem;
             _localAppDataDirectory = localAppDataDirectory;
 
             if (string.IsNullOrWhiteSpace(_localAppDataDirectory) || !_fileSystem.Directory.Exists(_localAppDataDirectory))
-                throw new DirectoryNotFoundException("Local App Data");
+                throw new DirectoryNotFoundException("Local Application Data");
 
             AppFolderPath = Path.Combine(_localAppDataDirectory, Constants.AppName);
+            CreateAppDirectory();
         }
 
-        public WindowsAppDataService() : this(new FileSystem(), Environment.GetEnvironmentVariable("LocalAppData"))
+        public LocalAppDataService() : this(new FileSystem(), Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData))
         {
         }
 

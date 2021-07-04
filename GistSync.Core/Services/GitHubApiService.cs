@@ -28,12 +28,7 @@ namespace GistSync.Core.Services
 
         private JsonSerializerOptions DefaultJsonSerializerOptions => new() { PropertyNameCaseInsensitive = true };
 
-        public Task<Gist[]> Gists(string personalAccessToken = null)
-        {
-            return Gists(personalAccessToken, CancellationToken.None);
-        }
-
-        public async Task<Gist[]> Gists(string personalAccessToken, CancellationToken ct)
+        public async Task<Gist[]> Gists(string personalAccessToken, CancellationToken ct = default)
         {
             var httpClient = ConstructHttpClient(personalAccessToken);
             var response = await httpClient.GetAsync("gists", ct);
@@ -42,12 +37,7 @@ namespace GistSync.Core.Services
             return await response.Content.ReadFromJsonAsync<Gist[]>(DefaultJsonSerializerOptions, ct);
         }
 
-        public Task<Gist> Gist([NotNull] string gistId, string personalAccessToken = null)
-        {
-            return Gist(gistId, personalAccessToken, CancellationToken.None);
-        }
-
-        public async Task<Gist> Gist([NotNull] string gistId, string personalAccessToken, CancellationToken ct)
+        public async Task<Gist> Gist([NotNull] string gistId, string personalAccessToken = null, CancellationToken ct = default)
         {
             var httpClient = ConstructHttpClient(personalAccessToken);
             var response = await httpClient.GetAsync($"gists/{gistId}", ct);

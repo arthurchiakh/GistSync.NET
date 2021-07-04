@@ -9,7 +9,7 @@ namespace GistSync.Core.Models
         public string GistId { get; set; }
         public DateTime GistUpdatedAt { get; set; }
         public string GistFileName { get; set; }
-        public string LocalFilePath { get; set; }
-        public string AccessTokenId { get; set; } // TODO: to get saved personal access token later
+        public string MappedLocalFilePath { get; set; }
+        public string GitHubPersonalAccessToken { get; set; }
     }
 }

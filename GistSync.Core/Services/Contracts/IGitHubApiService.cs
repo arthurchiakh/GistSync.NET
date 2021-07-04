@@ -11,24 +11,9 @@ namespace GistSync.Core.Services.Contracts
         /// Lists the authenticated user's gists or if called anonymously, this endpoint returns all public gists
         /// </summary>
         /// <param name="personalAccessToken">Personal Access Token</param>
-        /// <returns>Array of gists</returns>
-        Task<Gist[]> Gists(string personalAccessToken);
-
-        /// <summary>
-        /// Lists the authenticated user's gists or if called anonymously, this endpoint returns all public gists
-        /// </summary>
-        /// <param name="personalAccessToken">Personal Access Token</param>
         /// <param name="ct">Cancellation Token</param>
         /// <returns>Array of gists</returns>
-        Task<Gist[]> Gists(string personalAccessToken, CancellationToken ct);
-
-        /// <summary>
-        /// Get a gist by gist id
-        /// </summary>
-        /// <param name="gistId">Gist Id</param>
-        /// <param name="personalAccessToken">Personal Access Token</param>
-        /// <returns>Gist</returns>
-        Task<Gist> Gist([NotNull] string gistId, string personalAccessToken = null);
+        Task<Gist[]> Gists(string personalAccessToken, CancellationToken ct = default);
 
         /// <summary>
         /// Get a gist by gist id
@@ -37,6 +22,6 @@ namespace GistSync.Core.Services.Contracts
         /// <param name="personalAccessToken">Personal Access Token</param>
         /// <param name="ct">Cancellation Token</param>
         /// <returns>Gist</returns>
-        Task<Gist> Gist([NotNull] string gistId, string personalAccessToken, CancellationToken ct);
+        Task<Gist> Gist([NotNull] string gistId, string personalAccessToken = null, CancellationToken ct = default);
     }
 }

@@ -1,6 +1,6 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
+using GistSync.Core.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -10,19 +10,16 @@ namespace GistSync.Core
     {
         private readonly ILogger _logger;
 
-        public GistSyncBackgroundService(
-            ILogger<GistSyncBackgroundService> logger)
+        public GistSyncBackgroundService(ILogger<GistSyncBackgroundService> logger)
         {
             _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                Console.WriteLine(DateTime.Now);
-                await Task.Delay(1000, stoppingToken);
-            }
+            // TODO: Register tasks and watcher
+
+            await stoppingToken;
         }
     }
 }

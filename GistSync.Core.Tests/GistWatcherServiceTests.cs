@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using GistSync.Core.Factories;
 using GistSync.Core.Models.GitHub;
-using GistSync.Core.Models.Settings;
 using GistSync.Core.Services;
 using GistSync.Core.Services.Contracts;
+using GistSync.Core.Tests.Utils;
 using Moq;
 using NUnit.Framework;
 
@@ -18,27 +19,20 @@ namespace GistSync.Core.Tests
         [TestCase]
         public async Task GistWatcherService_LaterUpdatedDate_ExpectTriggerEvent()
         {
+            // Mock GitHubApiService
             var gitHubApiServiceMock = new Mock<IGitHubApiService>().As<IGitHubApiService>();
-            gitHubApiServiceMock.Setup(s => s.Gist(It.IsAny<string>(), It.IsAny<string>()).Result)
-                .Returns(new Gist()
+            gitHubApiServiceMock.Setup(s => s.Gist(It.IsAny<string>(), It.IsAny<string>(), CancellationToken.None).Result)
+                .Returns(new Gist
                 {
                     id = _gistId,
                     UpdatedAt = new Lazy<DateTime>(() => DateTime.UtcNow).Value
                 });
 
-            var appSettingService = new Mock<AppSettings>().As<IAppSettingService>();
-            appSettingService.Setup(s => s.Settings())
-                .Returns(new AppSettings
-                {
-                    GitHub = new GitHub
-                    {
-                        MaxConcurrentGistStatusCheck = 1,
-                        StatusRefreshIntervalSeconds = 1
-                    }
-                });
+            // Mock Configuration
+            var config = ConfigurationUtil.MockConfiguration();
 
-            _gistWatcherService = new Mock<GistWatcherService>(gitHubApiServiceMock.Object, appSettingService.Object) { CallBase = true }
-                .As<IGistWatcherService>().Object;
+            // Create service
+            _gistWatcherService = new GistWatcherService(gitHubApiServiceMock.Object, config);
 
             var triggerFlag = false;
 
