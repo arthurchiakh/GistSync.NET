@@ -34,12 +34,16 @@ namespace GistSync.Core.Services
 
         public async Task<SyncTask[]> GetAllTasks(CancellationToken ct = default(CancellationToken))
         {
-            if (!_readerWriterLock.TryEnterReadLock(TimeSpan.FromMinutes(5)))
-                throw new TimeoutException("ReadWriteLock timed out when reading getting all sync tasks.");
-
             try
             {
+                if (!_readerWriterLock.TryEnterReadLock(TimeSpan.FromMinutes(5)))
+                    throw new TimeoutException("ReadWriteLock timed out when reading getting all sync tasks.");
+
                 var dataFilePath = _appDataService.GetAbsolutePath(_dataFilePath);
+
+                // If date file not found
+                if (!_fileSystem.File.Exists(dataFilePath))
+                    return Array.Empty<SyncTask>();
 
                 await using var fileStream = _fileSystem.File.OpenRead(dataFilePath);
                 var allTasks = await JsonSerializer.DeserializeAsync<SyncTask[]>(fileStream, DefaultJsonDeserializerOptions(), ct);
@@ -48,35 +52,42 @@ namespace GistSync.Core.Services
             }
             finally
             {
-                _readerWriterLock.ExitReadLock();
+                if (_readerWriterLock.IsReadLockHeld)
+                    _readerWriterLock.ExitReadLock();
             }
         }
 
-        public async Task AddTask(SyncTask syncTask, CancellationToken ct = default(CancellationToken))
+        public async Task AddOrUpdateTask(SyncTask syncTask, CancellationToken ct = default(CancellationToken))
         {
-            if(!_readerWriterLock.TryEnterUpgradeableReadLock(TimeSpan.FromMinutes(5)))
-                throw new TimeoutException("ReadWriteLock timed out when reading getting all sync tasks.");
-
             try
             {
+                if (!_readerWriterLock.TryEnterUpgradeableReadLock(TimeSpan.FromMinutes(5)))
+                    throw new TimeoutException("ReadWriteLock timed out when reading getting all sync tasks.");
+
                 var allTasks = (await GetAllTasks(ct)).ToList();
+
+                // If exists then remove existing
+                if (allTasks.Any(t => t.Guid == syncTask.Guid))
+                    allTasks.RemoveAll(t => t.Guid == syncTask.Guid);
+
                 allTasks.Add(syncTask);
 
                 await SwapData(allTasks, ct);
             }
             finally
             {
-                _readerWriterLock.ExitUpgradeableReadLock();
+                if (_readerWriterLock.IsUpgradeableReadLockHeld)
+                    _readerWriterLock.ExitUpgradeableReadLock();
             }
         }
 
-        public async Task RemoveTask(string taskGuid, CancellationToken ct = default(CancellationToken))
+        public async Task RemoveTask(string taskGuid, CancellationToken ct = default)
         {
-            if (!_readerWriterLock.TryEnterUpgradeableReadLock(TimeSpan.FromMinutes(5)))
-                throw new TimeoutException("ReadWriteLock timed out when reading getting all sync tasks.");
-
             try
             {
+                if (!_readerWriterLock.TryEnterUpgradeableReadLock(TimeSpan.FromMinutes(5)))
+                    throw new TimeoutException("ReadWriteLock timed out when reading getting all sync tasks.");
+
                 var allTasks = (await GetAllTasks(ct)).ToList();
                 allTasks.RemoveAll(t => t.Guid.Equals(taskGuid, StringComparison.OrdinalIgnoreCase));
 
@@ -84,7 +95,8 @@ namespace GistSync.Core.Services
             }
             finally
             {
-                _readerWriterLock.ExitUpgradeableReadLock();
+                if (_readerWriterLock.IsUpgradeableReadLockHeld)
+                    _readerWriterLock.ExitUpgradeableReadLock();
             }
         }
 

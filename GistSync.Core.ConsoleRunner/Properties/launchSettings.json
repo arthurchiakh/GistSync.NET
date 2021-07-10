@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "GistSync.Core.ConsoleRunner": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

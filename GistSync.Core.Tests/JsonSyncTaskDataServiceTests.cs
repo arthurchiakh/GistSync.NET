@@ -78,7 +78,7 @@ $"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-id\"
 
             // Action
             var newGuid = Guid.NewGuid().ToString();
-            await _jsonSyncTaskDataService.AddTask(new SyncTask
+            await _jsonSyncTaskDataService.AddOrUpdateTask(new SyncTask
             {
                 Guid = newGuid,
                 GistId = "test-gist-id",

@@ -26,7 +26,7 @@ namespace GistSync.Core.Models
                 }
 
                 _updatedAtUtc = value;
-                GistUpdatedEvent?.Invoke(this);
+                GistUpdatedEvent?.Invoke(this, new GistUpdatedEventArgs(GistId, _updatedAtUtc.Value));
             }
         }
 
@@ -35,5 +35,17 @@ namespace GistSync.Core.Models
         internal GistWatch() { }
     }
 
-    public delegate void GistUpdatedEventHandler(GistWatch gistWatch);
+    public delegate void GistUpdatedEventHandler(object sender, GistUpdatedEventArgs args);
+
+    public class GistUpdatedEventArgs : EventArgs
+    {
+        public string GistId { get; }
+        public DateTime UpdatedAtUtc { get; }
+
+        public GistUpdatedEventArgs(string gistId, DateTime updatedAtUtc)
+        {
+            GistId = gistId;
+            UpdatedAtUtc = updatedAtUtc;
+        }
+    }
 }

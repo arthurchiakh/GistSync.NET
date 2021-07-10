@@ -23,5 +23,7 @@ namespace GistSync.Core.Services.Contracts
         /// <param name="ct">Cancellation Token</param>
         /// <returns>Gist</returns>
         Task<Gist> Gist([NotNull] string gistId, string personalAccessToken = null, CancellationToken ct = default);
+
+        Task<string> GetFileContentByUrl(string url, string personalAccessToken = null, CancellationToken ct = default);
     }
 }

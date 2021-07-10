@@ -53,7 +53,6 @@ namespace GistSync.Core.Services
                 {
                     await _semaphoreSlim.WaitAsync();
 
-
                     foreach (var watch in w)
                     {
                         Debug.WriteLine($"Calling api for {watch.GistId}");
@@ -66,7 +65,7 @@ namespace GistSync.Core.Services
                     _semaphoreSlim.Release();
                 });
 
-                _timer.Interval = TimeSpan.FromSeconds(_config.GetValue<int>("Gist:StatusRefreshIntervalSeconds", 300)).TotalMilliseconds;
+                _timer.Interval = TimeSpan.FromSeconds(_config.GetValue("Gist:StatusRefreshIntervalSeconds", 300)).TotalMilliseconds;
                 _timer.Start();
             }
         }

@@ -27,7 +27,7 @@ namespace GistSync.Core.Factories
             return new FileWatch
             {
                 FilePath = standardizedFilePath,
-                FileHash = _fileChecksumService.ComputeFileChecksum(standardizedFilePath),
+                FileHash = _fileChecksumService.ComputeChecksumByFilePath(standardizedFilePath),
                 ModifiedDateTimeUtc = _fileSystem.File.GetLastWriteTimeUtc(standardizedFilePath)
             };
         }

@@ -10,5 +10,7 @@ namespace GistSync.Core.Models.GitHub
         [JsonPropertyName("raw_url")]
         public string RawUrl { get; set; }
         public long Size { get; set; }
+        public bool? Truncated { get; set; }
+        public string Content { get; set; }
     }
 }

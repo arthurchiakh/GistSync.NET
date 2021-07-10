@@ -74,7 +74,7 @@ namespace GistSync.Core.Services
         {
             var standardizedFilePath = _fileSystem.Path.GetFullPath(args.FullPath);
             // Compute file hash for comparison
-            var newFileHash = _fileChecksumService.ComputeFileChecksum(standardizedFilePath);
+            var newFileHash = _fileChecksumService.ComputeChecksumByFilePath(standardizedFilePath);
             var modifiedDate = File.GetLastWriteTimeUtc(standardizedFilePath);
             foreach (var watch in _fileWatches[standardizedFilePath])
             {

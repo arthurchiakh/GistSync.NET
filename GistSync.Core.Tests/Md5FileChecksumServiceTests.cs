@@ -26,7 +26,7 @@ namespace GistSync.Core.Tests
         {
             _fileSystem.File.WriteAllText(_filePath, fileContent);
 
-            var checksum = _checksumService.ComputeFileChecksum(_filePath);
+            var checksum = _checksumService.ComputeChecksumByFilePath(_filePath);
             Assert.AreEqual(expected, checksum);
         }
     }

@@ -10,7 +10,7 @@ using GistSync.Core.Models.GitHub;
 using GistSync.Core.Services.Contracts;
 
 namespace GistSync.Core.Services
-{ 
+{
     public class GitHubApiService : IGitHubApiService
     {
         public const string GITHUB_API_URL = "https://api.github.com/";
@@ -44,6 +44,15 @@ namespace GistSync.Core.Services
             response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadFromJsonAsync<Gist>(DefaultJsonSerializerOptions, ct);
+        }
+
+        public async Task<string> GetFileContentByUrl(string url, string personalAccessToken = null, CancellationToken ct = default)
+        {
+            var httpClient = ConstructHttpClient(personalAccessToken);
+            var response = await httpClient.GetAsync(url, ct);
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadAsStringAsync(ct);
         }
     }
 }

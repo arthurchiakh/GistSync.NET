@@ -40,7 +40,7 @@ namespace GistSync.Core.Tests
             var gistWatchFactory = new GistWatchFactory();
             var gistWatch = gistWatchFactory.Create(_gistId);
             gistWatch.UpdatedAtUtc = DateTime.UtcNow;
-            gistWatch.GistUpdatedEvent += gistWatch => triggerFlag = true;
+            gistWatch.GistUpdatedEvent += (sender, args) => triggerFlag = true;
 
             // Add watch
             _gistWatcherService.AddWatch(gistWatch);

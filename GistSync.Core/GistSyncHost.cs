@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using GistSync.Core.Extensions;
 using GistSync.Core.Factories;
 using GistSync.Core.Factories.Contracts;
 using GistSync.Core.Services;
@@ -42,6 +43,7 @@ namespace GistSync.Core
                 c.AddSingleton<IGistWatcherService, GistWatcherService>();
                 c.AddSingleton<IFileWatchFactory, FileWatchFactory>();
                 c.AddSingleton<IFileWatcherService, FileWatcherService>();
+                c.RegisterSyncStrategyProvider();
 
                 c.AddHostedService<GistSyncBackgroundService>();
             })

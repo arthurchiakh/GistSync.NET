@@ -7,7 +7,7 @@ namespace GistSync.Core.Services.Contracts
     public interface ISyncTaskDataService
     {
         Task<SyncTask[]> GetAllTasks(CancellationToken ct = default);
-        Task AddTask(SyncTask syncTask, CancellationToken ct = default);
+        Task AddOrUpdateTask(SyncTask syncTask, CancellationToken ct = default);
         Task RemoveTask(string taskGuid, CancellationToken ct = default);
     }
 }
