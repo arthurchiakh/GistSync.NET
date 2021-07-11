@@ -22,7 +22,7 @@ namespace GistSync.Core.Factories
 
         public FileWatch Create(string filePath)
         {
-            var standardizedFilePath = StandardizeFilePath(filePath);
+            var standardizedFilePath = _fileSystem.Path.GetFullPath(filePath);
 
             return new FileWatch
             {
@@ -30,16 +30,6 @@ namespace GistSync.Core.Factories
                 FileHash = _fileChecksumService.ComputeChecksumByFilePath(standardizedFilePath),
                 ModifiedDateTimeUtc = _fileSystem.File.GetLastWriteTimeUtc(standardizedFilePath)
             };
-        }
-
-        /// <summary>
-        ///  Standardize slash and back slash characterV
-        /// </summary>
-        /// <param name="filePath">File path</param>
-        /// <returns>Standardized file path</returns>
-        private string StandardizeFilePath(string filePath)
-        {
-            return _fileSystem.Path.GetFullPath(filePath);
         }
     }
 }

@@ -24,7 +24,7 @@ namespace GistSync.Core
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var tasks = await _syncTaskDataService.GetAllTasks(stoppingToken);
+            var tasks = syncTaskDataService.GetAllTasks();
 
             foreach (var task in tasks)
             {

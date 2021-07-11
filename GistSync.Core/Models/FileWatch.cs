@@ -24,14 +24,24 @@ namespace GistSync.Core.Models
                 // Do nothing when the value remain unchanged
                 if (_fileHash.Equals(value, StringComparison.OrdinalIgnoreCase)) return;
 
-
                 _fileHash = value;
-                FileContentChangedEvent?.Invoke(this);
+                FileContentChangedEvent?.Invoke(this, new FileContentChangedEventArgs(FilePath, ModifiedDateTimeUtc.Value));
             }
         }
 
         public event FileContentChangedEventHandler FileContentChangedEvent;
     }
 
-    public delegate void FileContentChangedEventHandler(FileWatch fileWatch);
+    public delegate void FileContentChangedEventHandler(object sender, FileContentChangedEventArgs args);
+
+    public class FileContentChangedEventArgs : EventArgs
+    {
+        public string FilePath { get; set; }
+        public DateTime ModifiedDateTime { get; set; }
+        public FileContentChangedEventArgs(string filePath, DateTime modifiedDateTime)
+        {
+            FilePath = filePath;
+            ModifiedDateTime = modifiedDateTime;
+        }
+    }
 }

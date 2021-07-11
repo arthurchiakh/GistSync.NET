@@ -15,33 +15,31 @@ namespace GistSync.Core.Strategies
         private readonly IFileSystem _fileSystem;
         private readonly IGistWatchFactory _gistWatchFactory;
         private readonly IGistWatcherService _gistWatcherService;
-        private readonly IGitHubApiService _gistGitHubApiService;
+        private readonly IGitHubApiService _gitHubApiService;
         private readonly IFileChecksumService _fileChecksumService;
         private readonly ISyncTaskDataService _syncTaskDataService;
 
-        internal ActiveSyncStrategy(IFileSystem fileSystem,
-                                    IGistWatchFactory gistWatchFactory,
-                                    IGistWatcherService gistWatcherService,
-                                    IGitHubApiService gistGitHubApiService,
+        internal ActiveSyncStrategy(IFileSystem fileSystem, IGistWatchFactory gistWatchFactory,
+                                    IGistWatcherService gistWatcherService, IGitHubApiService gitHubApiService,
                                     IFileChecksumService fileChecksumService, ISyncTaskDataService syncTaskDataService)
         {
             _gistWatchFactory = gistWatchFactory;
             _gistWatcherService = gistWatcherService;
-            _gistGitHubApiService = gistGitHubApiService;
+            _gitHubApiService = gitHubApiService;
             _fileChecksumService = fileChecksumService;
             _syncTaskDataService = syncTaskDataService;
             _fileSystem = fileSystem;
         }
 
-        public ActiveSyncStrategy(IGistWatchFactory gistWatchFactory,
-                                    IGistWatcherService gistWatcherService,
-                                    IGitHubApiService gistGitHubApiService,
-                                    IFileChecksumService fileShChecksumService, ISyncTaskDataService syncTaskDataService)
-            : this(new FileSystem(), gistWatchFactory, gistWatcherService, gistGitHubApiService, fileShChecksumService, syncTaskDataService)
+        public ActiveSyncStrategy(IGistWatchFactory gistWatchFactory, IGistWatcherService gistWatcherService,
+                                    IGitHubApiService gistGitHubApiService, IFileChecksumService fileShChecksumService,
+                                    ISyncTaskDataService syncTaskDataService)
+            : this(new FileSystem(), gistWatchFactory, gistWatcherService, gistGitHubApiService,
+                    fileShChecksumService, syncTaskDataService)
         {
         }
 
-        public  void Setup(SyncTask task)
+        public void Setup(SyncTask task)
         {
             // Create watch object
             var gistWatch = _gistWatchFactory.Create(task.GistId, task.GitHubPersonalAccessToken);
@@ -51,19 +49,19 @@ namespace GistSync.Core.Strategies
             {
                 // Update UpdatedAtUtc datetime
                 task.GistUpdatedAt = args.UpdatedAtUtc;
-                await _syncTaskDataService.AddOrUpdateTask(task);
+                _syncTaskDataService.AddOrUpdateTask(task);
 
-                var gist = await _gistGitHubApiService.Gist(args.GistId);
+                var gist = await _gitHubApiService.Gist(args.GistId);
 
                 // Exit if the file not found in gist
                 // Probably the file has been renamed 
                 if (!gist.Files.TryGetValue(task.GistFileName, out var file)) return;
 
                 string newContent;
-                if (file.Truncated.GetValueOrDefault(false))
+                if (!file.Truncated.GetValueOrDefault(false))
                     newContent = file.Content;
                 else
-                    newContent = await _gistGitHubApiService.GetFileContentByUrl(file.RawUrl);
+                    newContent = await _gitHubApiService.GetFileContentByUrl(file.RawUrl);
 
                 // If file already exists then need to verify checksum.
                 // Because, the updated time could be changed by updating other files and new comment in the gist

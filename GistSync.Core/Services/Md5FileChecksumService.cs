@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Data;
 using System.IO;
 using System.IO.Abstractions;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using GistSync.Core.Extensions;
 using GistSync.Core.Services.Contracts;
 
 namespace GistSync.Core.Services
@@ -24,17 +26,21 @@ namespace GistSync.Core.Services
 
         public string ComputeChecksumByFilePath(string filePath)
         {
-            using var stream = new BufferedStream(_fileSystem.File.OpenRead(filePath), 1200000);
             using var md5 = MD5.Create();
+            using var fs = _fileSystem.File.OpenFileStreamInReadOnlyMode(filePath);
+            using var stream = new BufferedStream(fs, 1200000);
             var checksum = md5.ComputeHash(stream);
+            fs.Dispose();
             return BitConverter.ToString(checksum).Replace("-", string.Empty);
         }
 
         public async Task<string> ComputeChecksumByFilePathAsync(string filePath, CancellationToken ct = default)
         {
-            await using var stream = new BufferedStream(_fileSystem.File.OpenRead(filePath), 1200000);
             using var md5 = MD5.Create();
+            await using var fs = _fileSystem.File.OpenFileStreamInReadOnlyMode(filePath);
+            await using var stream = new BufferedStream(fs, 1200000);
             var checksum = await md5.ComputeHashAsync(stream, ct);
+            await fs.DisposeAsync();
             return BitConverter.ToString(checksum).Replace("-", string.Empty);
         }
 

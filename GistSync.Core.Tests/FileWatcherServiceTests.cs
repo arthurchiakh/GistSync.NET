@@ -49,7 +49,7 @@ namespace GistSync.Core.Tests
             var triggerFlag = false;
 
             var watch = _fileWatchFactory.Create(_filePath);
-            watch.FileContentChangedEvent += fileWatch => triggerFlag = true;
+            watch.FileContentChangedEvent += (sender, args) => triggerFlag = true;
 
             _fileWatcherService.AddWatch(watch);
             _fileSystem.File.AppendAllText(_filePath, string.Empty);
@@ -67,7 +67,7 @@ namespace GistSync.Core.Tests
             var triggerFlag = false;
 
             var watch = _fileWatchFactory.Create(_filePath);
-            watch.FileContentChangedEvent += fileWatch => triggerFlag = true;
+            watch.FileContentChangedEvent += (sender, args) => triggerFlag = true;
             _fileWatcherService.AddWatch(watch);
             _fileSystem.File.AppendAllText(_filePath, "appended content");
 

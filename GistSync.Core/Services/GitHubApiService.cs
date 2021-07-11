@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,6 +21,8 @@ namespace GistSync.Core.Services
             var httpClient = new HttpClient { BaseAddress = new Uri(GITHUB_API_URL) };
             httpClient.DefaultRequestHeaders.Clear();
             httpClient.DefaultRequestHeaders.UserAgent.Add(ProductInfoHeaderValue.Parse(Constants.AppName));
+            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
+
             if (!string.IsNullOrWhiteSpace(personalAccessToken))
                 httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"token {personalAccessToken}");
 
@@ -53,6 +56,17 @@ namespace GistSync.Core.Services
             response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadAsStringAsync(ct);
+        }
+
+        public async Task<Gist> PatchGist(string gistId, GistPatch gistPatch, string personalAccessToken = null, CancellationToken ct = default)
+        {
+            var httpClient = ConstructHttpClient(personalAccessToken);
+            var response = await httpClient.PatchAsync($"gists/{gistId}", 
+                new StringContent(JsonSerializer.Serialize(gistPatch), Encoding.UTF8),
+                ct);
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadFromJsonAsync<Gist>(DefaultJsonSerializerOptions, ct);
         }
     }
 }
