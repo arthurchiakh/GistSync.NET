@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.IO;
 using System.IO.Abstractions;
 using System.Security.Cryptography;
@@ -14,34 +13,28 @@ namespace GistSync.Core.Services
     public class Md5FileChecksumService : IFileChecksumService
     {
         private readonly IFileSystem _fileSystem;
+        private readonly ISynchronizedFileAccessService _synchronizedFileAccessService;
 
-        internal Md5FileChecksumService(IFileSystem fileSystem)
+        internal Md5FileChecksumService(IFileSystem fileSystem, ISynchronizedFileAccessService synchronizedFileAccessService)
         {
             _fileSystem = fileSystem;
+            _synchronizedFileAccessService = synchronizedFileAccessService;
         }
 
-        public Md5FileChecksumService() : this(new FileSystem())
+        public Md5FileChecksumService(ISynchronizedFileAccessService synchronizedFileAccessService)
+            : this(new FileSystem(), synchronizedFileAccessService)
         {
         }
 
         public string ComputeChecksumByFilePath(string filePath)
         {
-            using var md5 = MD5.Create();
-            using var fs = _fileSystem.File.OpenFileStreamInReadOnlyMode(filePath);
-            using var stream = new BufferedStream(fs, 1200000);
-            var checksum = md5.ComputeHash(stream);
-            fs.Dispose();
-            return BitConverter.ToString(checksum).Replace("-", string.Empty);
-        }
-
-        public async Task<string> ComputeChecksumByFilePathAsync(string filePath, CancellationToken ct = default)
-        {
-            using var md5 = MD5.Create();
-            await using var fs = _fileSystem.File.OpenFileStreamInReadOnlyMode(filePath);
-            await using var stream = new BufferedStream(fs, 1200000);
-            var checksum = await md5.ComputeHashAsync(stream, ct);
-            await fs.DisposeAsync();
-            return BitConverter.ToString(checksum).Replace("-", string.Empty);
+            return _synchronizedFileAccessService.SynchronizedReadStream(filePath, stream =>
+            {
+                using var md5 = MD5.Create();
+                using var bufferedStream = new BufferedStream(stream, 1200000);
+                var checksum = md5.ComputeHash(bufferedStream);
+                return BitConverter.ToString(checksum).Replace("-", string.Empty);
+            });
         }
 
         public string ComputeChecksumByFileContent(byte[] fileContent)

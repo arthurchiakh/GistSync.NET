@@ -16,7 +16,7 @@ namespace GistSync.Core.Services.Contracts
         Task<Gist[]> Gists(string personalAccessToken, CancellationToken ct = default);
 
         /// <summary>
-        /// Get a gist by gist id
+        /// Get a gist by gist Id
         /// </summary>
         /// <param name="gistId">Gist Id</param>
         /// <param name="personalAccessToken">Personal Access Token</param>

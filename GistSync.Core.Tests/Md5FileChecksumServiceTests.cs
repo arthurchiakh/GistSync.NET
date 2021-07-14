@@ -16,7 +16,7 @@ namespace GistSync.Core.Tests
         {
             _filePath = "C:/test.txt";
             _fileSystem = new MockFileSystem();
-            _checksumService = new Md5FileChecksumService(_fileSystem);
+            _checksumService = new Md5FileChecksumService(_fileSystem, new SynchronizedFileAccessService(_fileSystem));
         }
 
         [TestCase("Lorem ipsum dolor sit amet, consectetur adipiscing elit", "FC10A08DF7FAFA3871166646609E1C95")]

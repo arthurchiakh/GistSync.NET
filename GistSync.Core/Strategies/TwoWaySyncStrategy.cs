@@ -1,16 +1,10 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.IO.Abstractions;
-using System.Net;
-using System.Net.NetworkInformation;
-using GistSync.Core.Extensions;
 using GistSync.Core.Factories.Contracts;
 using GistSync.Core.Models;
 using GistSync.Core.Models.GitHub;
 using GistSync.Core.Services.Contracts;
 using GistSync.Core.Strategies.Contracts;
-using Microsoft.Extensions.Hosting;
-using File = GistSync.Core.Models.GitHub.File;
 
 namespace GistSync.Core.Strategies
 {
@@ -22,21 +16,28 @@ namespace GistSync.Core.Strategies
         private readonly IFileWatcherService _fileWatcherService;
         private readonly ActiveSyncStrategy _activeSyncStrategy;
         private readonly IGitHubApiService _gitHubApiService;
+        private readonly ISynchronizedFileAccessService _synchronizedFileAccessService;
+        private readonly IGistWatcherService _gistWatcherService;
 
-        internal TwoWaySyncStrategy(IFileSystem fileSystem, 
-            IFileWatchFactory fileWatchFactory, IFileWatcherService fileWatcherService, 
-            ActiveSyncStrategy activeSyncStrategy, IGitHubApiService gitHubApiService)
+        internal TwoWaySyncStrategy(IFileSystem fileSystem,
+            IFileWatchFactory fileWatchFactory, IFileWatcherService fileWatcherService,
+            ActiveSyncStrategy activeSyncStrategy, IGitHubApiService gitHubApiService,
+            ISynchronizedFileAccessService synchronizedFileAccessService, IGistWatcherService gistWatcherService)
         {
             _fileSystem = fileSystem;
             _fileWatchFactory = fileWatchFactory;
             _fileWatcherService = fileWatcherService;
             _activeSyncStrategy = activeSyncStrategy;
             _gitHubApiService = gitHubApiService;
+            _synchronizedFileAccessService = synchronizedFileAccessService;
+            _gistWatcherService = gistWatcherService;
         }
 
-        public TwoWaySyncStrategy(IFileWatchFactory fileWatchFactory, IFileWatcherService fileWatcherService, 
-            ActiveSyncStrategy activeSyncStrategy, IGitHubApiService gitHubApiService)
-            : this(new FileSystem(), fileWatchFactory, fileWatcherService, activeSyncStrategy, gitHubApiService)
+        public TwoWaySyncStrategy(IFileWatchFactory fileWatchFactory, IFileWatcherService fileWatcherService,
+            ActiveSyncStrategy activeSyncStrategy, IGitHubApiService gitHubApiService,
+            ISynchronizedFileAccessService synchronizedFileAccessService, IGistWatcherService gistWatcherService)
+            : this(new FileSystem(), fileWatchFactory, fileWatcherService, activeSyncStrategy,
+                gitHubApiService, synchronizedFileAccessService, gistWatcherService)
         {
         }
 
@@ -49,7 +50,7 @@ namespace GistSync.Core.Strategies
 
             fileWatch.FileContentChangedEvent += async (sender, args) =>
             {
-                var updatedGist = _gitHubApiService.PatchGist(task.GistId, new GistPatch
+                var updatedGist = await _gitHubApiService.PatchGist(task.GistId, new GistPatch
                 {
                     Files = new Dictionary<string, FilePatch>
                     {
@@ -57,11 +58,14 @@ namespace GistSync.Core.Strategies
                             task.GistFileName, new FilePatch
                             {
                                 FileName = task.GistFileName,
-                                Content = await _fileSystem.File.ReadAllTextInReadOnlyModeAsync(args.FilePath)
+                                Content = _synchronizedFileAccessService.SynchronizedReadAllText(args.FilePath)
                             }
                         }
                     }
                 }, task.GitHubPersonalAccessToken);
+
+                // Prevent back sync occurs
+                _gistWatcherService.SetGistUpdatedAtUtc(updatedGist.Id, updatedGist.UpdatedAt.Value);
             };
 
             _fileWatcherService.AddWatch(fileWatch);

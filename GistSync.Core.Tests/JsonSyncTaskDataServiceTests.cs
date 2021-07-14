@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
-using System.Threading.Tasks;
 using GistSync.Core.Models;
 using GistSync.Core.Services;
 using GistSync.Core.Services.Contracts;
@@ -29,13 +28,13 @@ namespace GistSync.Core.Tests
         }
 
         [Test]
-        public async Task JsonSyncTaskDataService_ReadData_ReturnCorrectData()
+        public void JsonSyncTaskDataService_ReadData_ReturnCorrectData()
         {
             // Mock file
             _fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>()
             {
                 {_mockDataFilePath, new MockFileData(
-                    $"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-id\",\"GistUpdatedAt\":\"2021-07-04T15:05:02.1709837Z\",\"GistFileName\":\"filename.txt\",\"MappedLocalFilePath\":\"C:/mapped.txt\",\"GitHubPersonalAccessToken\":null}}]")}
+                    $"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-Id\",\"GistUpdatedAt\":\"2021-07-04T15:05:02.1709837Z\",\"GistFileName\":\"filename.txt\",\"MappedLocalFilePath\":\"C:/mapped.txt\",\"GitHubPersonalAccessToken\":null}}]")}
             });
 
             // Mock app data service
@@ -44,10 +43,10 @@ namespace GistSync.Core.Tests
                 .Returns(_mockDataFilePath);
             _appDataService = appDataServiceMock.Object;
 
-            _jsonSyncTaskDataService = new JsonSyncTaskDataService(_fileSystem, _appDataService);
+            _jsonSyncTaskDataService = new JsonSyncTaskDataService(_fileSystem, _appDataService, new SynchronizedFileAccessService(_fileSystem));
 
             // Action
-            var allTasks = await _jsonSyncTaskDataService.GetAllTasks();
+            var allTasks = _jsonSyncTaskDataService.GetAllTasks();
 
             // Assert
             Assert.AreEqual(1, allTasks.Length);
@@ -55,13 +54,13 @@ namespace GistSync.Core.Tests
         }
 
         [Test]
-        public async Task JsonSyncTaskDataService_AddTask()
+        public void JsonSyncTaskDataService_AddTask()
         {
             // Mock file
             _fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>()
             {
                 {_mockDataFilePath, new MockFileData(
-$"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-id\",\"GistUpdatedAt\":\"2021-07-04T15:05:02.1709837Z\",\"GistFileName\":\"filename.txt\",\"MappedLocalFilePath\":\"C:/mapped.txt\",\"GitHubPersonalAccessToken\":null}}]")}
+$"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-Id\",\"GistUpdatedAt\":\"2021-07-04T15:05:02.1709837Z\",\"GistFileName\":\"filename.txt\",\"MappedLocalFilePath\":\"C:/mapped.txt\",\"GitHubPersonalAccessToken\":null}}]")}
             });
 
 
@@ -74,14 +73,14 @@ $"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-id\"
                 .Returns(_mockDataFilePath);
             _appDataService = appDataServiceMock.Object;
 
-            _jsonSyncTaskDataService = new JsonSyncTaskDataService(_fileSystem, _appDataService);
+            _jsonSyncTaskDataService = new JsonSyncTaskDataService(_fileSystem, _appDataService, new SynchronizedFileAccessService(_fileSystem));
 
             // Action
             var newGuid = Guid.NewGuid().ToString();
-            await _jsonSyncTaskDataService.AddOrUpdateTask(new SyncTask
+            _jsonSyncTaskDataService.AddOrUpdateTask(new SyncTask
             {
                 Guid = newGuid,
-                GistId = "test-gist-id",
+                GistId = "test-gist-Id",
                 GistFileName = "filename.txt",
                 GistUpdatedAt = DateTime.UtcNow,
                 MappedLocalFilePath = "C:/mapped.txt",
@@ -89,7 +88,7 @@ $"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-id\"
             });
 
 
-            var allTasks = await _jsonSyncTaskDataService.GetAllTasks();
+            var allTasks = _jsonSyncTaskDataService.GetAllTasks();
 
             // Assert
             Assert.AreEqual(2, allTasks.Length);
@@ -98,13 +97,13 @@ $"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-id\"
         }
 
         [Test]
-        public async Task JsonSyncTaskDataService_RemoveTask()
+        public void JsonSyncTaskDataService_RemoveTask()
         {
             // Mock file
             _fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>()
             {
                 {_mockDataFilePath, new MockFileData(
-                    $"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-id\",\"GistUpdatedAt\":\"2021-07-04T15:05:02.1709837Z\",\"GistFileName\":\"filename.txt\",\"MappedLocalFilePath\":\"C:/mapped.txt\",\"GitHubPersonalAccessToken\":null}}]")}
+                    $"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-Id\",\"GistUpdatedAt\":\"2021-07-04T15:05:02.1709837Z\",\"GistFileName\":\"filename.txt\",\"MappedLocalFilePath\":\"C:/mapped.txt\",\"GitHubPersonalAccessToken\":null}}]")}
             });
 
 
@@ -117,12 +116,12 @@ $"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-id\"
                 .Returns(_mockDataFilePath);
             _appDataService = appDataServiceMock.Object;
 
-            _jsonSyncTaskDataService = new JsonSyncTaskDataService(_fileSystem, _appDataService);
+            _jsonSyncTaskDataService = new JsonSyncTaskDataService(_fileSystem, _appDataService, new SynchronizedFileAccessService(_fileSystem));
 
             // Action
-            await _jsonSyncTaskDataService.RemoveTask(_testGuid);
+            _jsonSyncTaskDataService.RemoveTask(_testGuid);
 
-            var allTasks = await _jsonSyncTaskDataService.GetAllTasks();
+            var allTasks = _jsonSyncTaskDataService.GetAllTasks();
 
             // Assert
             Assert.AreEqual(0, allTasks.Length);

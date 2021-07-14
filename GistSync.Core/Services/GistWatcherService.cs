@@ -82,6 +82,17 @@ namespace GistSync.Core.Services
             }
         }
 
+        public void SetGistUpdatedAtUtc(string gistId, DateTime dateTimeUtc)
+        {
+            lock (_watchesLock)
+            {
+                foreach (var gistWatch in _watches[gistId])
+                {
+                    gistWatch.UpdatedAtUtc = dateTimeUtc;
+                }
+            }
+        }
+
         public void Dispose()
         {
             _timer?.Stop();

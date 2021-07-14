@@ -11,7 +11,7 @@ namespace GistSync.Core.Models.GitHub
         public string ForksUrl { get; set; }
         [JsonPropertyName("commits_url")]
         public string CommitsUrl { get; set; }
-        public string id { get; set; }
+        public string Id { get; set; }
         [JsonPropertyName("node_id")]
         public string NodeId { get; set; }
         [JsonPropertyName("git_pull_url")]

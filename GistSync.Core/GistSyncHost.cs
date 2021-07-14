@@ -43,6 +43,7 @@ namespace GistSync.Core
                 c.AddSingleton<IGistWatcherService, GistWatcherService>();
                 c.AddSingleton<IFileWatchFactory, FileWatchFactory>();
                 c.AddSingleton<IFileWatcherService, FileWatcherService>();
+                c.AddSingleton<ISynchronizedFileAccessService, SynchronizedFileAccessService>();
                 c.RegisterSyncStrategyProvider();
 
                 c.AddHostedService<GistSyncBackgroundService>();

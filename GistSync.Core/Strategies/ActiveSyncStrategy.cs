@@ -18,24 +18,27 @@ namespace GistSync.Core.Strategies
         private readonly IGitHubApiService _gitHubApiService;
         private readonly IFileChecksumService _fileChecksumService;
         private readonly ISyncTaskDataService _syncTaskDataService;
+        private readonly ISynchronizedFileAccessService _synchronizedFileAccessService;
 
-        internal ActiveSyncStrategy(IFileSystem fileSystem, IGistWatchFactory gistWatchFactory,
-                                    IGistWatcherService gistWatcherService, IGitHubApiService gitHubApiService,
-                                    IFileChecksumService fileChecksumService, ISyncTaskDataService syncTaskDataService)
+        internal ActiveSyncStrategy(IFileSystem fileSystem,
+                    IGistWatchFactory gistWatchFactory, IGistWatcherService gistWatcherService,
+                    IGitHubApiService gitHubApiService, IFileChecksumService fileChecksumService,
+                    ISyncTaskDataService syncTaskDataService, ISynchronizedFileAccessService synchronizedFileAccessService)
         {
             _gistWatchFactory = gistWatchFactory;
             _gistWatcherService = gistWatcherService;
             _gitHubApiService = gitHubApiService;
             _fileChecksumService = fileChecksumService;
             _syncTaskDataService = syncTaskDataService;
+            _synchronizedFileAccessService = synchronizedFileAccessService;
             _fileSystem = fileSystem;
         }
 
         public ActiveSyncStrategy(IGistWatchFactory gistWatchFactory, IGistWatcherService gistWatcherService,
                                     IGitHubApiService gistGitHubApiService, IFileChecksumService fileShChecksumService,
-                                    ISyncTaskDataService syncTaskDataService)
+                                    ISyncTaskDataService syncTaskDataService, ISynchronizedFileAccessService synchronizedFileAccessService)
             : this(new FileSystem(), gistWatchFactory, gistWatcherService, gistGitHubApiService,
-                    fileShChecksumService, syncTaskDataService)
+                    fileShChecksumService, syncTaskDataService, synchronizedFileAccessService)
         {
         }
 
@@ -69,15 +72,15 @@ namespace GistSync.Core.Strategies
                 {
                     var newContentChecksum =
                         await _fileChecksumService.ComputeChecksumByFileContentAsync(newContent);
-                    var existingContentChecksum =
-                        await _fileChecksumService.ComputeChecksumByFilePathAsync(task.MappedLocalFilePath);
+                    var existingContentChecksum = _fileChecksumService.ComputeChecksumByFilePath(task.MappedLocalFilePath);
 
                     if (newContentChecksum.Equals(existingContentChecksum, StringComparison.OrdinalIgnoreCase)) return; // No update if content is the same
                 }
 
                 // Write to the file
-                await using var fs = _fileSystem.File.Open(task.MappedLocalFilePath, FileMode.Create);
-                await fs.WriteAsync(Encoding.UTF8.GetBytes(newContent));
+                await _synchronizedFileAccessService.SynchronizedWriteStream(task.MappedLocalFilePath, FileMode.Create,
+                    async stream => { await stream.WriteAsync(Encoding.UTF8.GetBytes(newContent)); }
+                );
             };
 
             _gistWatcherService.AddWatch(gistWatch);

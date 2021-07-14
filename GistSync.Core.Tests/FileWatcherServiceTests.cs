@@ -38,7 +38,7 @@ namespace GistSync.Core.Tests
             _fileSystem.File.WriteAllText(_filePath,
                 "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua");
 
-            _fileChecksumService = new Md5FileChecksumService(_fileSystem);
+            _fileChecksumService = new Md5FileChecksumService(_fileSystem, new SynchronizedFileAccessService(_fileSystem));
             _fileWatchFactory = new FileWatchFactory(_fileSystem, _fileChecksumService);
             _fileWatcherService = new FileWatcherService(_fileSystem, _fileChecksumService);
         }

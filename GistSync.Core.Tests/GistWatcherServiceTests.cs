@@ -24,7 +24,7 @@ namespace GistSync.Core.Tests
             gitHubApiServiceMock.Setup(s => s.Gist(It.IsAny<string>(), It.IsAny<string>(), CancellationToken.None).Result)
                 .Returns(new Gist
                 {
-                    id = _gistId,
+                    Id = _gistId,
                     UpdatedAt = new Lazy<DateTime>(() => DateTime.UtcNow).Value
                 });
 

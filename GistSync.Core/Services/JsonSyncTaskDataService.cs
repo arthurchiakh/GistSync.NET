@@ -17,91 +17,25 @@ namespace GistSync.Core.Services
     {
         private readonly IFileSystem _fileSystem;
         private readonly IAppDataService _appDataService;
+        private readonly ISynchronizedFileAccessService _synchronizedFileAccessService;
 
         private readonly string _dataFilePath = "./SyncTaskData.json";
         private readonly string _swapTaskDataFilePath = "./SyncTaskData.json.swap";
-        private readonly ReaderWriterLockSlim _readerWriterLock;
 
-        internal JsonSyncTaskDataService(IFileSystem fileSystem, IAppDataService appDataService)
+        internal JsonSyncTaskDataService(IFileSystem fileSystem, IAppDataService appDataService,
+                                        ISynchronizedFileAccessService synchronizedFileAccessService)
         {
             _fileSystem = fileSystem;
             _appDataService = appDataService;
-
-            _readerWriterLock = new ReaderWriterLockSlim();
+            _synchronizedFileAccessService = synchronizedFileAccessService;
         }
 
-        public JsonSyncTaskDataService(IAppDataService appDataService) : this(new FileSystem(), appDataService)
+        public JsonSyncTaskDataService(IAppDataService appDataService, ISynchronizedFileAccessService synchronizedFileAccessService)
+                                        : this(new FileSystem(), appDataService, synchronizedFileAccessService)
         {
         }
 
         public SyncTask[] GetAllTasks()
-        {
-            _readerWriterLock.EnterReadLock();
-
-            try
-            {
-                return GetAllTasksFromData();
-            }
-            finally
-            {
-                if (_readerWriterLock.IsReadLockHeld)
-                    _readerWriterLock.ExitReadLock();
-            }
-        }
-
-        public void AddOrUpdateTask(SyncTask syncTask)
-        {
-            _readerWriterLock.EnterWriteLock();
-
-            try
-            {
-                var allTasks = GetAllTasksFromData().ToList();
-
-                // If exists then remove existing
-                if (allTasks.Any(t => t.Guid == syncTask.Guid))
-                    allTasks.RemoveAll(t => t.Guid == syncTask.Guid);
-
-                allTasks.Add(syncTask);
-
-                SwapData(allTasks);
-            }
-            finally
-            {
-                if (_readerWriterLock.IsWriteLockHeld)
-                    _readerWriterLock.ExitWriteLock();
-            }
-
-        }
-
-        public void RemoveTask(string taskGuid)
-        {
-            _readerWriterLock.EnterWriteLock();
-
-            try
-            {
-                var allTasks = GetAllTasksFromData().ToList();
-                allTasks.RemoveAll(t => t.Guid.Equals(taskGuid, StringComparison.OrdinalIgnoreCase));
-
-                _readerWriterLock.EnterWriteLock();
-
-                try
-                {
-                    SwapData(allTasks);
-                }
-                finally
-                {
-                    _readerWriterLock.ExitWriteLock(); ;
-                }
-            }
-            finally
-            {
-                if (_readerWriterLock.IsWriteLockHeld)
-                    _readerWriterLock.ExitWriteLock();
-            }
-
-        }
-
-        private SyncTask[] GetAllTasksFromData()
         {
             var dataFilePath = _appDataService.GetAbsolutePath(_dataFilePath);
 
@@ -109,21 +43,44 @@ namespace GistSync.Core.Services
             if (!_fileSystem.File.Exists(dataFilePath))
                 return Array.Empty<SyncTask>();
 
-            return JsonSerializer.Deserialize<SyncTask[]>(_fileSystem.File.ReadAllTextInReadOnlyMode(dataFilePath),
-                                                        DefaultJsonDeserializerOptions());
+            return JsonSerializer.Deserialize<SyncTask[]>(_synchronizedFileAccessService.SynchronizedReadAllText(dataFilePath),
+                DefaultJsonDeserializerOptions());
         }
 
-        private void SwapData(IEnumerable<SyncTask> tasks, CancellationToken ct = default)
+        public void AddOrUpdateTask(SyncTask syncTask)
         {
-            // Create swap data file
-            var swapFilePath = _appDataService.GetAbsolutePath(_swapTaskDataFilePath);
-            using var swapFs = _fileSystem.File.Open(swapFilePath, FileMode.Create);
-            swapFs.Write(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tasks, DefaultJsonSerializerOptions())));
-            swapFs.Dispose();
+            var allTasks = GetAllTasks().ToList();
 
-            // Swap data file
-            var dataFilePath = _appDataService.GetAbsolutePath(_dataFilePath);
-            _fileSystem.File.Move(swapFilePath, dataFilePath, true);
+            // If exists then remove existing
+            if (allTasks.Any(t => t.Guid == syncTask.Guid))
+                allTasks.RemoveAll(t => t.Guid == syncTask.Guid);
+
+            allTasks.Add(syncTask);
+
+            SwapWriteData(allTasks);
+        }
+
+        public void RemoveTask(string taskGuid)
+        {
+            var allTasks = GetAllTasks().ToList();
+            allTasks.RemoveAll(t => t.Guid.Equals(taskGuid, StringComparison.OrdinalIgnoreCase));
+            SwapWriteData(allTasks);
+        }
+
+        private void SwapWriteData(IEnumerable<SyncTask> tasks, CancellationToken ct = default)
+        {
+            var swapFilePath = _appDataService.GetAbsolutePath(_swapTaskDataFilePath);
+            _synchronizedFileAccessService.SynchronizedWriteStream(swapFilePath, FileMode.Create,
+                swapFs =>
+                {
+                    swapFs.Write(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tasks, DefaultJsonSerializerOptions())));
+                    swapFs.Close();
+
+
+                    // Swap data file
+                    var dataFilePath = _appDataService.GetAbsolutePath(_dataFilePath);
+                    _fileSystem.File.Move(swapFilePath, dataFilePath, true);
+                });
         }
 
         private JsonSerializerOptions DefaultJsonDeserializerOptions() => new()
