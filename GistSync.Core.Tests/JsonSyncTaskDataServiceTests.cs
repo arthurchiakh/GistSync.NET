@@ -15,14 +15,14 @@ namespace GistSync.Core.Tests
         private IFileSystem _fileSystem;
         private IAppDataService _appDataService;
         private JsonSyncTaskDataService _jsonSyncTaskDataService;
-        private string _testGuid;
+        private string _testGistId;
         private string _mockDataFilePath;
         private string _mockSwapDataFilePath;
 
         [SetUp]
         public void SetUp()
         {
-            _testGuid = Guid.NewGuid().ToString();
+            _testGistId = Guid.NewGuid().ToString();
             _mockDataFilePath = "C:/data.json";
             _mockSwapDataFilePath = "C:/data.json.swap";
         }
@@ -34,7 +34,7 @@ namespace GistSync.Core.Tests
             _fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>()
             {
                 {_mockDataFilePath, new MockFileData(
-                    $"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-Id\",\"GistUpdatedAt\":\"2021-07-04T15:05:02.1709837Z\",\"GistFileName\":\"filename.txt\",\"MappedLocalFilePath\":\"C:/mapped.txt\",\"GitHubPersonalAccessToken\":null}}]")}
+                    $"[{{\"GistId\":\"{_testGistId}\",\"SyncStrategyType\":0,\"GistUpdatedAt\":\"2021-07-04T15:05:02.1709837Z\",\"GistFileName\":\"filename.txt\",\"MappedLocalFilePath\":\"C:/mapped.txt\",\"GitHubPersonalAccessToken\":null}}]")}
             });
 
             // Mock app data service
@@ -50,7 +50,7 @@ namespace GistSync.Core.Tests
 
             // Assert
             Assert.AreEqual(1, allTasks.Length);
-            Assert.AreEqual(_testGuid, allTasks[0].Guid);
+            Assert.AreEqual(_testGistId, allTasks[0].GistId);
         }
 
         [Test]
@@ -60,7 +60,7 @@ namespace GistSync.Core.Tests
             _fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>()
             {
                 {_mockDataFilePath, new MockFileData(
-$"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-Id\",\"GistUpdatedAt\":\"2021-07-04T15:05:02.1709837Z\",\"GistFileName\":\"filename.txt\",\"MappedLocalFilePath\":\"C:/mapped.txt\",\"GitHubPersonalAccessToken\":null}}]")}
+$"[{{\"GistId\":\"{_testGistId}\",\"SyncStrategyType\":0,\"GistUpdatedAt\":\"2021-07-04T15:05:02.1709837Z\",\"GistFileName\":\"filename.txt\",\"MappedLocalFilePath\":\"C:/mapped.txt\",\"GitHubPersonalAccessToken\":null}}]")}
             });
 
 
@@ -76,11 +76,10 @@ $"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-Id\"
             _jsonSyncTaskDataService = new JsonSyncTaskDataService(_fileSystem, _appDataService, new SynchronizedFileAccessService(_fileSystem));
 
             // Action
-            var newGuid = Guid.NewGuid().ToString();
+            var newGistId = Guid.NewGuid().ToString();
             _jsonSyncTaskDataService.AddOrUpdateTask(new SyncTask
             {
-                Guid = newGuid,
-                GistId = "test-gist-Id",
+                GistId = newGistId,
                 GistFileName = "filename.txt",
                 GistUpdatedAt = DateTime.UtcNow,
                 MappedLocalFilePath = "C:/mapped.txt",
@@ -92,8 +91,8 @@ $"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-Id\"
 
             // Assert
             Assert.AreEqual(2, allTasks.Length);
-            Assert.AreEqual(_testGuid, allTasks[0].Guid);
-            Assert.AreEqual(newGuid, allTasks[1].Guid);
+            Assert.AreEqual(_testGistId, allTasks[0].GistId);
+            Assert.AreEqual(newGistId, allTasks[1].GistId);
         }
 
         [Test]
@@ -103,7 +102,7 @@ $"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-Id\"
             _fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>()
             {
                 {_mockDataFilePath, new MockFileData(
-                    $"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-Id\",\"GistUpdatedAt\":\"2021-07-04T15:05:02.1709837Z\",\"GistFileName\":\"filename.txt\",\"MappedLocalFilePath\":\"C:/mapped.txt\",\"GitHubPersonalAccessToken\":null}}]")}
+                    $"[{{\"GistId\":\"{_testGistId}\",\"SyncStrategyType\":0,\"GistUpdatedAt\":\"2021-07-04T15:05:02.1709837Z\",\"GistFileName\":\"filename.txt\",\"MappedLocalFilePath\":\"C:/mapped.txt\",\"GitHubPersonalAccessToken\":null}}]")}
             });
 
 
@@ -119,7 +118,7 @@ $"[{{\"Guid\":\"{_testGuid}\",\"SyncStrategyType\":0,\"GistId\":\"test-gist-Id\"
             _jsonSyncTaskDataService = new JsonSyncTaskDataService(_fileSystem, _appDataService, new SynchronizedFileAccessService(_fileSystem));
 
             // Action
-            _jsonSyncTaskDataService.RemoveTask(_testGuid);
+            _jsonSyncTaskDataService.RemoveTask(_testGistId);
 
             var allTasks = _jsonSyncTaskDataService.GetAllTasks();
 

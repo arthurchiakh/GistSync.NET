@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GistSync.Core.Factories;
@@ -16,7 +17,7 @@ namespace GistSync.Core.Tests
         private string _gistId = "db136774b432d328fcc041ea0ea1f88a";
         private IGistWatcherService _gistWatcherService;
 
-        [TestCase]
+        [Test, Timeout(5000)]
         public async Task GistWatcherService_LaterUpdatedDate_ExpectTriggerEvent()
         {
             // Mock GitHubApiService
@@ -25,7 +26,8 @@ namespace GistSync.Core.Tests
                 .Returns(new Gist
                 {
                     Id = _gistId,
-                    UpdatedAt = new Lazy<DateTime>(() => DateTime.UtcNow).Value
+                    UpdatedAt = new Lazy<DateTime>(() => DateTime.UtcNow).Value,
+                    Files = new Dictionary<string, File>()
                 });
 
             // Mock Configuration
@@ -38,12 +40,10 @@ namespace GistSync.Core.Tests
 
             // Create gist watch
             var gistWatchFactory = new GistWatchFactory();
-            var gistWatch = gistWatchFactory.Create(_gistId);
-            gistWatch.UpdatedAtUtc = DateTime.UtcNow;
-            gistWatch.GistUpdatedEvent += (sender, args) => triggerFlag = true;
+            var gistWatch = gistWatchFactory.Create(_gistId, (sender, args) => triggerFlag = true, DateTime.UtcNow);
 
             // Add watch
-            _gistWatcherService.AddWatch(gistWatch);
+            _gistWatcherService.Subscribe(gistWatch);
 
             // Give buffer time to let timer to pick the job
             await Task.Delay(200);

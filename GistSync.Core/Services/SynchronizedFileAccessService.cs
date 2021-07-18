@@ -23,8 +23,6 @@ namespace GistSync.Core.Services
         {
         }
 
-        #region Stream
-
         public void SynchronizedReadStream(string filePath, Action<Stream> action)
         {
             var readerWriterLock = AcquireReaderWriterLock(filePath);
@@ -32,7 +30,7 @@ namespace GistSync.Core.Services
 
             try
             {
-                using var fs = _fileSystem.FileStream.Create(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var fs = CreateReadStream(filePath);
                 action?.Invoke(fs);
             }
             finally
@@ -49,7 +47,7 @@ namespace GistSync.Core.Services
 
             try
             {
-                using var fs = _fileSystem.FileStream.Create(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var fs = CreateReadStream(filePath);
                 return func(fs);
             }
             finally
@@ -67,7 +65,7 @@ namespace GistSync.Core.Services
 
             try
             {
-                using var fs = _fileSystem.FileStream.Create(filePath, fileMode, FileAccess.Write, FileShare.None);
+                using var fs = CreateWriteStream(filePath, fileMode);
                 action?.Invoke(fs);
             }
             finally
@@ -85,7 +83,7 @@ namespace GistSync.Core.Services
 
             try
             {
-                using var fs = _fileSystem.FileStream.Create(filePath, fileMode, FileAccess.Write, FileShare.None);
+                using var fs = CreateWriteStream(filePath, fileMode);
                 return func(fs);
             }
             finally
@@ -95,8 +93,6 @@ namespace GistSync.Core.Services
             }
         }
 
-        #endregion  
-
         public string SynchronizedReadAllText(string filePath)
         {
             var readerWriterLock = AcquireReaderWriterLock(filePath);
@@ -104,7 +100,7 @@ namespace GistSync.Core.Services
 
             try
             {
-                using var fs = _fileSystem.FileStream.Create(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var fs = CreateReadStream(filePath);
                 using var sr = new StreamReader(fs, Encoding.UTF8);
                 return sr.ReadToEnd();
             }
@@ -114,6 +110,12 @@ namespace GistSync.Core.Services
                     readerWriterLock.ExitReadLock();
             }
         }
+
+        private Stream CreateReadStream(string filePath) =>
+            _fileSystem.FileStream.Create(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+
+        private Stream CreateWriteStream(string filePath, FileMode fileMode) =>
+            _fileSystem.FileStream.Create(filePath, fileMode, FileAccess.Write, FileShare.Read);
 
         private ReaderWriterLockSlim AcquireReaderWriterLock(string filePath)
         {

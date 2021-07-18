@@ -39,7 +39,7 @@ namespace GistSync.Core.Services
                 foreach (var watcher in _fileSystemWatchers.Values) watcher?.Dispose();
         }
 
-        public void AddWatch([NotNull] FileWatch fileWatch)
+        public IDisposable Subscribe([NotNull] FileWatch fileWatch)
         {
             if (fileWatch == null)
                 throw new ArgumentNullException(nameof(fileWatch)); // GIGO
@@ -68,18 +68,48 @@ namespace GistSync.Core.Services
                 _fileSystemWatchers[fileWatch.FilePath] = watcher;
                 _fileSystemWatchers[fileWatch.FilePath].Changed += OnFileChanged;
             }
+
+            return new Unsubscriber(_fileSystemWatchers, _fileWatches, fileWatch);
         }
 
         private void OnFileChanged(object sender, FileSystemEventArgs args)
         {
-            var standardizedFilePath = _fileSystem.Path.GetFullPath(args.FullPath);
+            var normalizedFilePath = _fileSystem.Path.GetFullPath(args.FullPath);
             // Compute file hash for comparison
-            var newFileHash = _fileChecksumService.ComputeChecksumByFilePath(standardizedFilePath);
-            var modifiedDate = File.GetLastWriteTimeUtc(standardizedFilePath);
-            foreach (var watch in _fileWatches[standardizedFilePath])
+            var newFileHash = _fileChecksumService.ComputeChecksumByFilePath(normalizedFilePath);
+            var modifiedDate = File.GetLastWriteTimeUtc(normalizedFilePath);
+            foreach (var watch in _fileWatches[normalizedFilePath])
             {
-                watch.ModifiedDateTimeUtc = modifiedDate;
-                watch.FileHash = newFileHash;
+                if (!watch.Checksum.Equals(newFileHash, StringComparison.OrdinalIgnoreCase))
+                {
+                    watch.ModifiedDateTimeUtc = modifiedDate;
+                    watch.Checksum = newFileHash;
+                    watch.TriggerFileContentChanged();
+                }
+            }
+        }
+
+        private class Unsubscriber : IDisposable
+        {
+            private readonly IDictionary<string, IFileSystemWatcher> _fileSystemWatchers;
+            private readonly IDictionary<string, IList<FileWatch>> _fileWatches;
+            private readonly FileWatch _fileWatch;
+
+            public Unsubscriber(IDictionary<string, IFileSystemWatcher> fileSystemWatchers, IDictionary<string, IList<FileWatch>> fileWatches,
+                FileWatch fileWatch)
+            {
+                _fileSystemWatchers = fileSystemWatchers;
+                _fileWatch = fileWatch;
+                _fileWatches = fileWatches;
+            }
+
+            public void Dispose()
+            {
+                if (_fileSystemWatchers.TryGetValue(_fileWatch.FilePath, out var fileSystemWatcher))
+                    fileSystemWatcher.Dispose();
+
+                _fileSystemWatchers.Remove(_fileWatch.FilePath);
+                _fileWatches.Remove(_fileWatch.FilePath);
             }
         }
     }

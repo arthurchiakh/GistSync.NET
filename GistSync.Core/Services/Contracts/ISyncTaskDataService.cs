@@ -6,6 +6,6 @@ namespace GistSync.Core.Services.Contracts
     {
         SyncTask[] GetAllTasks();
         void AddOrUpdateTask(SyncTask syncTask);
-        void RemoveTask(string taskGuid);
+        void RemoveTask(string gistId);
     }
 }

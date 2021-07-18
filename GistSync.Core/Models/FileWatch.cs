@@ -6,27 +6,13 @@ namespace GistSync.Core.Models
     {
         internal FileWatch() { }
 
-        private string _fileHash;
         public string FilePath { get; set; }
         public DateTime? ModifiedDateTimeUtc { get; set; }
-        public string FileHash
+        public string Checksum { get; set; }
+
+        public void TriggerFileContentChanged()
         {
-            get => _fileHash;
-            set
-            {
-                // Do not trigger event for first update
-                if (_fileHash == null)
-                {
-                    _fileHash = value;
-                    return;
-                }
-
-                // Do nothing when the value remain unchanged
-                if (_fileHash.Equals(value, StringComparison.OrdinalIgnoreCase)) return;
-
-                _fileHash = value;
-                FileContentChangedEvent?.Invoke(this, new FileContentChangedEventArgs(FilePath, ModifiedDateTimeUtc.Value));
-            }
+            FileContentChangedEvent?.Invoke(this, new FileContentChangedEventArgs(FilePath, ModifiedDateTimeUtc.Value, Checksum));
         }
 
         public event FileContentChangedEventHandler FileContentChangedEvent;
@@ -38,10 +24,12 @@ namespace GistSync.Core.Models
     {
         public string FilePath { get; set; }
         public DateTime ModifiedDateTime { get; set; }
-        public FileContentChangedEventArgs(string filePath, DateTime modifiedDateTime)
+        public string Checksum { get; set; }
+        public FileContentChangedEventArgs(string filePath, DateTime modifiedDateTime, string checksum)
         {
             FilePath = filePath;
             ModifiedDateTime = modifiedDateTime;
+            Checksum = checksum;
         }
     }
 }

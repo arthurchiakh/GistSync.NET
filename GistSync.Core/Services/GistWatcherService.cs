@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Timers;
@@ -17,7 +16,7 @@ namespace GistSync.Core.Services
         private readonly IConfiguration _config;
         private readonly Timer _timer;
         private readonly SemaphoreSlim _semaphoreSlim;
-        private readonly IDictionary<string, IList<GistWatch>> _watches;
+        private readonly IDictionary<string, GistWatch> _watches;
         private readonly object _watchesLock;
 
         public GistWatcherService(IGitHubApiService gitHubApiService, IConfiguration config)
@@ -25,8 +24,8 @@ namespace GistSync.Core.Services
             _gitHubApiService = gitHubApiService;
             _config = config;
 
-            _semaphoreSlim = new SemaphoreSlim(_config.GetValue<int>("Gist:MaxConcurrentGistStatusCheck", 5));
-            _watches = new Dictionary<string, IList<GistWatch>>();
+            _semaphoreSlim = new SemaphoreSlim(_config.GetValue("Gist:MaxConcurrentGistStatusCheck", 5));
+            _watches = new Dictionary<string, GistWatch>();
             _watchesLock = new object();
 
             _timer = new Timer
@@ -45,24 +44,26 @@ namespace GistSync.Core.Services
 
         private void OnTimerOnElapsed(object sender, ElapsedEventArgs args)
         {
-            Debug.WriteLine("Start to call api");
-
             lock (_watchesLock)
             {
                 _watches.Values.AsParallel().ForAll(async w =>
                 {
                     await _semaphoreSlim.WaitAsync();
 
-                    foreach (var watch in w)
+                    try
                     {
-                        Debug.WriteLine($"Calling api for {watch.GistId}");
-
-                        var gist = await _gitHubApiService.Gist(watch.GistId, watch.PersonalAccessToken);
-                        if (gist.UpdatedAt.HasValue)
-                            watch.UpdatedAtUtc = gist.UpdatedAt;
+                        var gist = await _gitHubApiService.Gist(w.GistId, w.PersonalAccessToken);
+                        if (w.UpdatedAtUtc != gist.UpdatedAt)
+                        {
+                            w.Files = gist.Files.Select(kv => kv.Value).ToArray();
+                            w.UpdatedAtUtc = gist.UpdatedAt;
+                            w.TriggerGistUpdatedEvent();
+                        }
                     }
-
-                    _semaphoreSlim.Release();
+                    finally
+                    {
+                        _semaphoreSlim.Release();
+                    }
                 });
 
                 _timer.Interval = TimeSpan.FromSeconds(_config.GetValue("Gist:StatusRefreshIntervalSeconds", 300)).TotalMilliseconds;
@@ -70,33 +71,47 @@ namespace GistSync.Core.Services
             }
         }
 
-        public void AddWatch(GistWatch gistWatch)
+        public IDisposable Subscribe(GistWatch gistWatch)
         {
             lock (_watchesLock)
             {
-                // Register file watch
                 if (!_watches.ContainsKey(gistWatch.GistId))
-                    _watches[gistWatch.GistId] = new List<GistWatch> { gistWatch };
-                else
-                    _watches[gistWatch.GistId].Add(gistWatch);
+                    _watches[gistWatch.GistId] = gistWatch;
+
+                return new Unsubscriber(_watches, _watchesLock, gistWatch);
             }
         }
 
-        public void SetGistUpdatedAtUtc(string gistId, DateTime dateTimeUtc)
+        public void OverrideGistUpdatedAtUtc(string gistId, DateTime dateTimeUtc)
         {
             lock (_watchesLock)
-            {
-                foreach (var gistWatch in _watches[gistId])
-                {
-                    gistWatch.UpdatedAtUtc = dateTimeUtc;
-                }
-            }
+                _watches[gistId].UpdatedAtUtc = dateTimeUtc;
         }
 
         public void Dispose()
         {
             _timer?.Stop();
             _timer?.Dispose();
+        }
+
+        private class Unsubscriber : IDisposable
+        {
+            private readonly IDictionary<string, GistWatch> _watches;
+            private readonly GistWatch _gistWatch;
+            private readonly object _watchesLock;
+
+            public Unsubscriber(IDictionary<string, GistWatch> watches, object watchesLock, GistWatch gistWatch)
+            {
+                _watches = watches;
+                _watchesLock = watchesLock;
+                _gistWatch = gistWatch;
+            }
+
+            public void Dispose()
+            {
+                lock (_watchesLock)
+                    _watches.Remove(_gistWatch.GistId);
+            }
         }
     }
 }

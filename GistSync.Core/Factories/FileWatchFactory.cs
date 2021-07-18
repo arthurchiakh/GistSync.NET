@@ -20,16 +20,25 @@ namespace GistSync.Core.Factories
         {
         }
 
-        public FileWatch Create(string filePath)
+        public FileWatch Create(string filePath, string checksum, FileContentChangedEventHandler fileContentChangedEvent)
         {
-            var standardizedFilePath = _fileSystem.Path.GetFullPath(filePath);
+            var normalizedFilePath = _fileSystem.Path.GetFullPath(filePath);
+            var latestChecksum = _fileChecksumService.ComputeChecksumByFilePath(normalizedFilePath);
 
-            return new FileWatch
+            var fileWatch = new FileWatch
             {
-                FilePath = standardizedFilePath,
-                FileHash = _fileChecksumService.ComputeChecksumByFilePath(standardizedFilePath),
-                ModifiedDateTimeUtc = _fileSystem.File.GetLastWriteTimeUtc(standardizedFilePath)
+                FilePath = normalizedFilePath,
+                Checksum = checksum ?? latestChecksum,
+                ModifiedDateTimeUtc = _fileSystem.File.GetLastWriteTimeUtc(normalizedFilePath)
             };
+
+            fileWatch.FileContentChangedEvent += fileContentChangedEvent;
+
+            // Pick up unhandled file content changed
+            if (checksum != null && checksum != latestChecksum)
+               fileWatch.TriggerFileContentChanged();
+
+            return fileWatch;
         }
     }
 }

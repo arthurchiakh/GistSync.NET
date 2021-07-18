@@ -1,17 +1,23 @@
-﻿using GistSync.Core.Factories.Contracts;
+﻿using System;
+using GistSync.Core.Factories.Contracts;
 using GistSync.Core.Models;
 
 namespace GistSync.Core.Factories
 {
     public class GistWatchFactory : IGistWatchFactory
     {
-        public GistWatch Create(string gistId, string personalAccessToken = null)
+        public GistWatch Create(string gistId, GistUpdatedEventHandler gistUpdatedEvent, DateTime? updatedAtUtc = null, string personalAccessToken = null)
         {
-            return new GistWatch
+            var gistWatch = new GistWatch
             {
                 GistId = gistId,
-                PersonalAccessToken = personalAccessToken
+                UpdatedAtUtc = updatedAtUtc,
+                PersonalAccessToken = personalAccessToken,
             };
+
+            gistWatch.GistUpdatedEvent += gistUpdatedEvent;
+
+            return gistWatch;
         }
     }
 }

@@ -1,33 +1,19 @@
 ﻿using System;
+using GistSync.Core.Models.GitHub;
 
 namespace GistSync.Core.Models
 {
     public sealed class GistWatch
     {
-        private DateTime? _updatedAtUtc;
 
         public string GistId { get; set; }
         public string PersonalAccessToken { get; set; }
-        public DateTime? UpdatedAtUtc
+        public File[] Files { get; set; }
+        public DateTime? UpdatedAtUtc { get; set; }
+
+        public void TriggerGistUpdatedEvent()
         {
-            get => _updatedAtUtc;
-            set
-            {
-                // Do do nothing if value remain unchanged
-                if (value == default(DateTime) || // Handle default datetime assigned when constructed
-                    value == _updatedAtUtc)
-                    return;
-
-                // Do not trigger event for first update
-                if (!_updatedAtUtc.HasValue)
-                {
-                    _updatedAtUtc = value;
-                    return;
-                }
-
-                _updatedAtUtc = value;
-                GistUpdatedEvent?.Invoke(this, new GistUpdatedEventArgs(GistId, _updatedAtUtc.Value));
-            }
+            GistUpdatedEvent?.Invoke(this, new GistUpdatedEventArgs(GistId, UpdatedAtUtc.Value, Files));
         }
 
         public event GistUpdatedEventHandler GistUpdatedEvent;
@@ -41,11 +27,12 @@ namespace GistSync.Core.Models
     {
         public string GistId { get; }
         public DateTime UpdatedAtUtc { get; }
-
-        public GistUpdatedEventArgs(string gistId, DateTime updatedAtUtc)
+        public File[] Files { get; }
+        public GistUpdatedEventArgs(string gistId, DateTime updatedAtUtc, File[] files)
         {
             GistId = gistId;
             UpdatedAtUtc = updatedAtUtc;
+            Files = files;
         }
     }
 }

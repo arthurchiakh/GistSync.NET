@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.IO.Abstractions;
+using System.Linq;
 using System.Text;
 using GistSync.Core.Factories.Contracts;
 using GistSync.Core.Models;
@@ -15,75 +16,87 @@ namespace GistSync.Core.Strategies
         private readonly IFileSystem _fileSystem;
         private readonly IGistWatchFactory _gistWatchFactory;
         private readonly IGistWatcherService _gistWatcherService;
-        private readonly IGitHubApiService _gitHubApiService;
         private readonly IFileChecksumService _fileChecksumService;
         private readonly ISyncTaskDataService _syncTaskDataService;
         private readonly ISynchronizedFileAccessService _synchronizedFileAccessService;
+        private readonly IGitHubApiService _gitHubApiService;
+        private IDisposable _gistWatchUnsubscriber;
 
         internal ActiveSyncStrategy(IFileSystem fileSystem,
                     IGistWatchFactory gistWatchFactory, IGistWatcherService gistWatcherService,
-                    IGitHubApiService gitHubApiService, IFileChecksumService fileChecksumService,
-                    ISyncTaskDataService syncTaskDataService, ISynchronizedFileAccessService synchronizedFileAccessService)
+                    IFileChecksumService fileChecksumService, ISyncTaskDataService syncTaskDataService,
+                    ISynchronizedFileAccessService synchronizedFileAccessService, IGitHubApiService gitHubApiService)
         {
             _gistWatchFactory = gistWatchFactory;
             _gistWatcherService = gistWatcherService;
-            _gitHubApiService = gitHubApiService;
             _fileChecksumService = fileChecksumService;
             _syncTaskDataService = syncTaskDataService;
             _synchronizedFileAccessService = synchronizedFileAccessService;
+            _gitHubApiService = gitHubApiService;
             _fileSystem = fileSystem;
         }
 
         public ActiveSyncStrategy(IGistWatchFactory gistWatchFactory, IGistWatcherService gistWatcherService,
-                                    IGitHubApiService gistGitHubApiService, IFileChecksumService fileShChecksumService,
-                                    ISyncTaskDataService syncTaskDataService, ISynchronizedFileAccessService synchronizedFileAccessService)
-            : this(new FileSystem(), gistWatchFactory, gistWatcherService, gistGitHubApiService,
-                    fileShChecksumService, syncTaskDataService, synchronizedFileAccessService)
+                                    IFileChecksumService fileShChecksumService, ISyncTaskDataService syncTaskDataService,
+                                    ISynchronizedFileAccessService synchronizedFileAccessService, IGitHubApiService gitHubApiService)
+            : this(new FileSystem(), gistWatchFactory, gistWatcherService, fileShChecksumService,
+                syncTaskDataService, synchronizedFileAccessService, gitHubApiService)
         {
         }
 
         public void Setup(SyncTask task)
         {
             // Create watch object
-            var gistWatch = _gistWatchFactory.Create(task.GistId, task.GitHubPersonalAccessToken);
-
-            // Register event
-            gistWatch.GistUpdatedEvent += async (sender, args) =>
-            {
-                // Update UpdatedAtUtc datetime
-                task.GistUpdatedAt = args.UpdatedAtUtc;
-                _syncTaskDataService.AddOrUpdateTask(task);
-
-                var gist = await _gitHubApiService.Gist(args.GistId);
-
-                // Exit if the file not found in gist
-                // Probably the file has been renamed 
-                if (!gist.Files.TryGetValue(task.GistFileName, out var file)) return;
-
-                string newContent;
-                if (!file.Truncated.GetValueOrDefault(false))
-                    newContent = file.Content;
-                else
-                    newContent = await _gitHubApiService.GetFileContentByUrl(file.RawUrl);
-
-                // If file already exists then need to verify checksum.
-                // Because, the updated time could be changed by updating other files and new comment in the gist
-                if (_fileSystem.File.Exists(task.MappedLocalFilePath))
+            var gistWatch = _gistWatchFactory.Create(task.GistId,
+                async (sender, args) =>
                 {
-                    var newContentChecksum =
-                        await _fileChecksumService.ComputeChecksumByFileContentAsync(newContent);
-                    var existingContentChecksum = _fileChecksumService.ComputeChecksumByFilePath(task.MappedLocalFilePath);
+                    var file = args.Files.FirstOrDefault(f => f.FileName.Equals(task.GistFileName));
+                    // Exit if the file not found in gist
+                    // Probably the file has been renamed 
+                    if (file == null) return;
 
-                    if (newContentChecksum.Equals(existingContentChecksum, StringComparison.OrdinalIgnoreCase)) return; // No update if content is the same
-                }
+                    string newContent;
+                    if (!file.Truncated.GetValueOrDefault(false))
+                        newContent = file.Content;
+                    else
+                        newContent = await _gitHubApiService.GetFileContentByUrl(file.RawUrl);
 
-                // Write to the file
-                await _synchronizedFileAccessService.SynchronizedWriteStream(task.MappedLocalFilePath, FileMode.Create,
-                    async stream => { await stream.WriteAsync(Encoding.UTF8.GetBytes(newContent)); }
-                );
-            };
+                    var newContentChecksum = await _fileChecksumService.ComputeChecksumByFileContentAsync(newContent);
 
-            _gistWatcherService.AddWatch(gistWatch);
+                    // If file already exists then need to verify checksum.
+                    // Because, the updated time could be changed by updating other files and new comment in the gist
+                    if (_fileSystem.File.Exists(task.MappedLocalFilePath))
+                    {
+                        var existingContentChecksum = _fileChecksumService.ComputeChecksumByFilePath(task.MappedLocalFilePath);
+                        // No need to update if content is the same
+                        if (newContentChecksum.Equals(existingContentChecksum, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Update UpdatedAtUtc datetime
+                            task.GistUpdatedAt = args.UpdatedAtUtc;
+                            _syncTaskDataService.AddOrUpdateTask(task);
+                            return;
+                        }
+                    }
+
+                    // Write to the file
+                    await _synchronizedFileAccessService.SynchronizedWriteStream(task.MappedLocalFilePath, FileMode.Create,
+                        async stream => { await stream.WriteAsync(Encoding.UTF8.GetBytes(newContent)); }
+                    );
+
+                    // Update UpdatedAtUtc datetime
+                    task.GistUpdatedAt = args.UpdatedAtUtc;
+                    task.FileChecksum = newContentChecksum;
+                    _syncTaskDataService.AddOrUpdateTask(task);
+                },
+                task.GistUpdatedAt,
+                task.GitHubPersonalAccessToken);
+
+            _gistWatchUnsubscriber = _gistWatcherService.Subscribe(gistWatch);
+        }
+
+        public void Destroy()
+        {
+            _gistWatchUnsubscriber.Dispose();
         }
     }
 }
