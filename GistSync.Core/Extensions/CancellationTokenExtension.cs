@@ -14,7 +14,7 @@ namespace GistSync.Core.Extensions
         public static CancellationTokenAwaiter GetAwaiter(this CancellationToken ct)
         {
             // return our special awaiter
-            return new CancellationTokenAwaiter
+            return new()
             {
                 CancellationToken = ct
             };

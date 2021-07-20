@@ -20,12 +20,14 @@ namespace GistSync.Core.Strategies
         private readonly ISyncTaskDataService _syncTaskDataService;
         private readonly ISynchronizedFileAccessService _synchronizedFileAccessService;
         private readonly IGitHubApiService _gitHubApiService;
+        private readonly INotificationService _notificationService;
         private IDisposable _gistWatchUnsubscriber;
 
         internal ActiveSyncStrategy(IFileSystem fileSystem,
                     IGistWatchFactory gistWatchFactory, IGistWatcherService gistWatcherService,
                     IFileChecksumService fileChecksumService, ISyncTaskDataService syncTaskDataService,
-                    ISynchronizedFileAccessService synchronizedFileAccessService, IGitHubApiService gitHubApiService)
+                    ISynchronizedFileAccessService synchronizedFileAccessService, IGitHubApiService gitHubApiService, 
+                    INotificationService notificationService)
         {
             _gistWatchFactory = gistWatchFactory;
             _gistWatcherService = gistWatcherService;
@@ -33,14 +35,16 @@ namespace GistSync.Core.Strategies
             _syncTaskDataService = syncTaskDataService;
             _synchronizedFileAccessService = synchronizedFileAccessService;
             _gitHubApiService = gitHubApiService;
+            _notificationService = notificationService;
             _fileSystem = fileSystem;
         }
 
         public ActiveSyncStrategy(IGistWatchFactory gistWatchFactory, IGistWatcherService gistWatcherService,
                                     IFileChecksumService fileShChecksumService, ISyncTaskDataService syncTaskDataService,
-                                    ISynchronizedFileAccessService synchronizedFileAccessService, IGitHubApiService gitHubApiService)
+                                    ISynchronizedFileAccessService synchronizedFileAccessService, IGitHubApiService gitHubApiService, 
+                                    INotificationService notificationService)
             : this(new FileSystem(), gistWatchFactory, gistWatcherService, fileShChecksumService,
-                syncTaskDataService, synchronizedFileAccessService, gitHubApiService)
+                syncTaskDataService, synchronizedFileAccessService, gitHubApiService, notificationService)
         {
         }
 
@@ -87,6 +91,9 @@ namespace GistSync.Core.Strategies
                     task.GistUpdatedAt = args.UpdatedAtUtc;
                     task.FileChecksum = newContentChecksum;
                     _syncTaskDataService.AddOrUpdateTask(task);
+
+                    // Notification
+                    _notificationService.NotifyFileUpdated(task.MappedLocalFilePath);
                 },
                 task.GistUpdatedAt,
                 task.GitHubPersonalAccessToken);

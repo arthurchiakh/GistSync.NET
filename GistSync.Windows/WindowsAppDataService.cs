@@ -1,18 +1,18 @@
 ﻿using System;
 using System.IO;
 using System.IO.Abstractions;
+using GistSync.Core;
 using GistSync.Core.Services.Contracts;
-using FileSystem = System.IO.Abstractions.FileSystem;
 
-namespace GistSync.Core.Services
+namespace GistSync.Windows
 {
-    public class LocalAppDataService : IAppDataService
+    public class WindowsAppDataService : IAppDataService
     {
         public string AppFolderPath { get; }
         private IFileSystem _fileSystem { get; }
         private string _localAppDataDirectory { get; }
 
-        internal LocalAppDataService(IFileSystem fileSystem, string localAppDataDirectory = null)
+        internal WindowsAppDataService(IFileSystem fileSystem, string localAppDataDirectory = null)
         {
             _fileSystem = fileSystem;
             _localAppDataDirectory = localAppDataDirectory;
@@ -24,7 +24,7 @@ namespace GistSync.Core.Services
             CreateAppDirectory();
         }
 
-        public LocalAppDataService() : this(new FileSystem(), Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData))
+        public WindowsAppDataService() : this(new FileSystem(), Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData))
         {
         }
 
