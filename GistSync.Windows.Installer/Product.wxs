@@ -43,11 +43,23 @@
     <!-- Help/Support website (shows in the Add/Remove programs) -->
     <Property Id="ARPURLINFOABOUT">https://github.com/arthurchiakh/GistSync.NET</Property>
 
-    <!-- Create a basic UI for the installer -->
-    <UIRef Id="WixUI_Minimal" />
+    <!-- UI -->
+    <UI>
+      <UIRef Id="WixUI_InstallDir" />
 
-    <!-- Change the installer UI background images -->
-    <WixVariable Id="WixUILicense" Value="$$(SolutionDir)\License.md" />
+      <!-- Skip license dialog -->
+      <Publish Dialog="WelcomeDlg"
+               Control="Next"
+               Event="NewDialog"
+               Value="InstallDirDlg"
+               Order="2">1</Publish>
+      <Publish Dialog="InstallDirDlg"
+               Control="Back"
+               Event="NewDialog"
+               Value="WelcomeDlg"
+               Order="2">1</Publish>
+    </UI>
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
 
     <!-- Define components, shortcuts, files etc... for installer -->
     <Feature Id="ProductFeature" Title="GistSync.NET" Level="1">
