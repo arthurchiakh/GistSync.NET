@@ -27,7 +27,7 @@ namespace GistSync.Core.Tests
                 {
                     Id = _gistId,
                     UpdatedAt = new Lazy<DateTime>(() => DateTime.UtcNow).Value,
-                    Files = new Dictionary<string, File>()
+                    Files = new Dictionary<string, GistSync.Core.Models.GitHub.File>()
                 });
 
             // Mock Configuration

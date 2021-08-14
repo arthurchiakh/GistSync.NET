@@ -4,7 +4,7 @@ using System.IO.Abstractions;
 using GistSync.Core;
 using GistSync.Core.Services.Contracts;
 
-namespace GistSync.Windows
+namespace GistSync.Windows.Services
 {
     public class WindowsAppDataService : IAppDataService
     {

@@ -8,7 +8,7 @@ namespace GistSync.Core.Models
 
         public string GistId { get; set; }
         public string PersonalAccessToken { get; set; }
-        public File[] Files { get; set; }
+        public GitHub.File[] Files { get; set; }
         public DateTime? UpdatedAtUtc { get; set; }
 
         public void TriggerGistUpdatedEvent()
@@ -27,8 +27,8 @@ namespace GistSync.Core.Models
     {
         public string GistId { get; }
         public DateTime UpdatedAtUtc { get; }
-        public File[] Files { get; }
-        public GistUpdatedEventArgs(string gistId, DateTime updatedAtUtc, File[] files)
+        public GitHub.File[] Files { get; }
+        public GistUpdatedEventArgs(string gistId, DateTime updatedAtUtc, GitHub.File[] files)
         {
             GistId = gistId;
             UpdatedAtUtc = updatedAtUtc;

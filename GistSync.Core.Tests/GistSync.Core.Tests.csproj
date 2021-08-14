@@ -5,6 +5,7 @@
     <IsPackable>false</IsPackable>
     <UserSecretsId>c3794287-09bb-4fa3-9faf-38edd444e5e4</UserSecretsId>
     <Platforms>x64;x86</Platforms>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

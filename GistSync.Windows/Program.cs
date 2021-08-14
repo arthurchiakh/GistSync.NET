@@ -1,6 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using GistSync.Core;
 using GistSync.Core.Services.Contracts;
+using GistSync.Windows.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -8,9 +11,8 @@ namespace GistSync.Windows
 {
     class Program
     {
-        private static IHost _host;
-
-        private static async Task Main(string[] args)
+        [STAThread]
+        static async Task Main(string[] args)
         {
             var builder = new GistSyncHost().GetDefaultHostBuilder(args);
 
@@ -21,10 +23,16 @@ namespace GistSync.Windows
                 c.AddSingleton<INotificationService, WindowsNotificationService>();
             });
 
-            _host = builder.Build();
+            var _host = builder.Build();
 
             using (_host)
                 await _host.RunAsync();
+
+            Application.SetHighDpiMode(HighDpiMode.SystemAware);
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+
+            Application.Run(new App());
         }
     }
 }

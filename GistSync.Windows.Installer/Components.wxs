@@ -19,7 +19,7 @@
 
         <Shortcut Id="MainAppShortcut"
                   Name="!(loc.ProductName_$(var.Platform))"
-                  Target="[INSTALLFOLDER]GistSync.Windows.exe"
+                  Target="[INSTALLFOLDER]GistSync.NET.exe"
                   Directory="InstallProgramMenuFolder"
                   WorkingDirectory="INSTALLFOLDER"
                   Icon="icon.ico"

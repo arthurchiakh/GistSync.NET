@@ -2,7 +2,7 @@
 using GistSync.Core.Services.Contracts;
 using Microsoft.Toolkit.Uwp.Notifications;
 
-namespace GistSync.Windows
+namespace GistSync.Windows.Services
 {
     public class WindowsNotificationService : INotificationService
     {
