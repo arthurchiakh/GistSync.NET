@@ -11,12 +11,12 @@ namespace GistSync.Core.Services
         private readonly string _appFolderFullPath;
         private readonly IFileSystem _fileSystem;
 
-        internal DefaultAppDataService(IFileSystem fileSystem, string appDataDirectory = null)
+        internal DefaultAppDataService(IFileSystem fileSystem, string appDataDirectory = "./data/")
         {
             _fileSystem = fileSystem;
 
             if (string.IsNullOrWhiteSpace(appDataDirectory))
-                throw new DirectoryNotFoundException("Local Application Data");
+                throw new ArgumentNullException(nameof(appDataDirectory));
 
             _appFolderFullPath = appDataDirectory;
             CreateAppDirectory();

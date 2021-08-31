@@ -10,17 +10,14 @@ namespace GistSync.Core.Tests
     public class DefaultAppDataServiceTests
     {
         private DefaultAppDataService _defaultAppDataService;
-        private static string _localAppDataDirectory = @"C:\Users\Arthur\AppData\Local";
-        private static string _appFolderFullPath = Path.Combine(@"C:\Users\Arthur\AppData\Local\", Constants.AppName);
+        private static string _appFolderFullPath = @"./data";
         private IFileSystem _fileSystem;
 
         [SetUp]
         public void SetUp()
         {
             _fileSystem = new MockFileSystem();
-            _fileSystem.Directory.CreateDirectory(_localAppDataDirectory);
-
-            _defaultAppDataService = new DefaultAppDataService(_fileSystem, _localAppDataDirectory);
+            _defaultAppDataService = new DefaultAppDataService(_fileSystem, _appFolderFullPath);
         }
 
         [Test]
