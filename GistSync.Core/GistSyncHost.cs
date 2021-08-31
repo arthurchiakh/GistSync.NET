@@ -1,14 +1,16 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using GistSync.Core.Extensions;
 using GistSync.Core.Factories;
 using GistSync.Core.Factories.Contracts;
 using GistSync.Core.Services;
 using GistSync.Core.Services.Contracts;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace GistSync.Core
 {
@@ -16,9 +18,9 @@ namespace GistSync.Core
     {
         private IHost _host;
 
-        public async Task Start(string[] args = null, CancellationToken ct = default)
+        public async Task Start(string[] args = null, Action<WebApplicationBuilder>? options = null, CancellationToken ct = default)
         {
-            _host = GetDefaultHostBuilder(args).Build();
+            _host = CreateAppHost(args, options);
 
             using (_host)
                 await _host.RunAsync(token: ct);
@@ -26,49 +28,59 @@ namespace GistSync.Core
 
         public async Task Stop()
         {
-            if (_host != null)
-                await _host.StopAsync();
+            await _host.StopAsync();
         }
 
-        public HostBuilder GetDefaultHostBuilder(string[] args)
+        private WebApplication CreateAppHost(string[] args, Action<WebApplicationBuilder>? options = null)
         {
-            var builder = new HostBuilder();
-            builder.ConfigureHostConfiguration(configHost =>
-                {
-                    configHost.AddEnvironmentVariables(prefix: "ASPNETCORE_");
-                    configHost.AddCommandLine(args);
-                })
-                .ConfigureAppConfiguration((context, config) =>
-                {
-                    var env = context.HostingEnvironment;
+            var builder = WebApplication.CreateBuilder(args);
 
-                    config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                        .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true);
-                })
-                .ConfigureServices((context, c) =>
-                {
-                    var env = context.HostingEnvironment;
+            // Services
+            builder.Services.AddControllers();
+            builder.Services.AddRazorPages();
 
-                    c.AddSingleton<IFileChecksumService, Md5FileChecksumService>();
-                    c.AddSingleton<IGitHubApiService, GitHubApiService>();
-                    c.AddSingleton<IAppDataService, DefaultAppDataService>();
-                    c.AddSingleton<ISyncTaskDataService, JsonSyncTaskDataService>();
-                    c.AddSingleton<IGistWatchFactory, GistWatchFactory>();
-                    c.AddSingleton<IGistWatcherService, GistWatcherService>();
-                    c.AddSingleton<IFileWatchFactory, FileWatchFactory>();
-                    c.AddSingleton<IFileWatcherService, FileWatcherService>();
-                    c.AddSingleton<ISynchronizedFileAccessService, SynchronizedFileAccessService>();
-                    c.AddSingleton<INotificationService, DefaultNotificationService>();
-                    c.RegisterSyncStrategyProvider();
+            builder.Services.AddSingleton<IFileChecksumService, Md5FileChecksumService>();
+            builder.Services.AddSingleton<IGitHubApiService, GitHubApiService>();
+            builder.Services.AddSingleton<IAppDataService, DefaultAppDataService>();
+            builder.Services.AddSingleton<ISyncTaskDataService, JsonSyncTaskDataService>();
+            builder.Services.AddSingleton<IGistWatchFactory, GistWatchFactory>();
+            builder.Services.AddSingleton<IGistWatcherService, GistWatcherService>();
+            builder.Services.AddSingleton<IFileWatchFactory, FileWatchFactory>();
+            builder.Services.AddSingleton<IFileWatcherService, FileWatcherService>();
+            builder.Services.AddSingleton<ISynchronizedFileAccessService, SynchronizedFileAccessService>();
+            builder.Services.AddSingleton<INotificationService, DefaultNotificationService>();
+            builder.Services.RegisterSyncStrategyProvider();
 
-                    c.AddHostedService<GistSyncBackgroundService>();
-                })
-                .ConfigureLogging((context, b) =>
-                {
-                    b.AddConsole();
-                });
+            builder.Services.AddHostedService<GistSyncBackgroundService>();
 
-            return builder;
+            // Allow options add in
+            options?.Invoke(builder);
+
+            // Build
+            var app = builder.Build();
+
+            // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+                app.UseWebAssemblyDebugging();
+            }
+            else
+            {
+                app.UseExceptionHandler("/Error");
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts();
+            }
+
+            app.UseHttpsRedirection();
+            app.UseBlazorFrameworkFiles();
+            app.UseStaticFiles();
+            app.UseRouting();
+            app.MapRazorPages();
+            app.MapControllers();
+            app.MapFallbackToFile("index.html");
+
+            return app;
         }
     }
 }

@@ -3,21 +3,42 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0-windows10.0.17763.0</TargetFramework>
-    <StartupObject />
-    <Platforms>x64;x86</Platforms>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AssemblyName>GistSync.NET</AssemblyName>
-    <UseWindowsForms>true</UseWindowsForms>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.0.2" />
+    <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.0-preview1" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.955-prerelease" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\GistSync.Core\GistSync.Core.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Properties\launchSettings.json">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="AfterBuildPublishWebUI" AfterTargets="Build">
+    <Message Text="After Build - Publish WebUI to $(OutDir)" Importance="High" />
+    <Exec Command="dotnet publish ..\GistSync.WebUI\GistSync.WebUI.csproj -c $(Configuration) -o $(OutDir)" />
+  </Target>
+
+
+  <Target Name="AfterPublishPublishWebUI" AfterTargets="Publish">
+    <Message Text="After Publish - Publish WebUI to $(PublishDir)" Importance="High" />
+    <Exec Command="dotnet publish ..\GistSync.WebUI\GistSync.WebUI.csproj -c $(Configuration) -o $(PublishDir)" />
+  </Target>
 
 </Project>
