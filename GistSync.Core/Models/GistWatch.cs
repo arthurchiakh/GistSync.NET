@@ -1,5 +1,4 @@
 ﻿using System;
-using GistSync.Core.Models.GitHub;
 
 namespace GistSync.Core.Models
 {

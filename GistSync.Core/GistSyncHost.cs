@@ -9,6 +9,7 @@ using GistSync.Core.Services.Contracts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -36,13 +37,15 @@ namespace GistSync.Core
             var builder = WebApplication.CreateBuilder(args);
 
             // Services
+            builder.Services.AddDbContext<GistSyncDbContext>();
+
             builder.Services.AddControllers();
             builder.Services.AddRazorPages();
 
             builder.Services.AddSingleton<IFileChecksumService, Md5FileChecksumService>();
             builder.Services.AddSingleton<IGitHubApiService, GitHubApiService>();
             builder.Services.AddSingleton<IAppDataService, DefaultAppDataService>();
-            builder.Services.AddSingleton<ISyncTaskDataService, JsonSyncTaskDataService>();
+            builder.Services.AddSingleton<ISyncTaskDataService, SyncTaskDataService>();
             builder.Services.AddSingleton<IGistWatchFactory, GistWatchFactory>();
             builder.Services.AddSingleton<IGistWatcherService, GistWatcherService>();
             builder.Services.AddSingleton<IFileWatchFactory, FileWatchFactory>();
