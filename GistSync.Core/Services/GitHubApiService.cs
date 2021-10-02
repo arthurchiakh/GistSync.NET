@@ -40,7 +40,7 @@ namespace GistSync.Core.Services
             return await response.Content.ReadFromJsonAsync<Gist[]>(DefaultJsonSerializerOptions, ct);
         }
 
-        public async Task<Gist> Gist([NotNull] string gistId, string personalAccessToken = null, CancellationToken ct = default)
+        public async Task<Gist> Gist([NotNull] string gistId, string personalAccessToken = null!, CancellationToken ct = default)
         {
             var httpClient = ConstructHttpClient(personalAccessToken);
             var response = await httpClient.GetAsync($"gists/{gistId}", ct);

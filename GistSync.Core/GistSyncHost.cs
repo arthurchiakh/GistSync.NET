@@ -7,9 +7,6 @@ using GistSync.Core.Factories.Contracts;
 using GistSync.Core.Services;
 using GistSync.Core.Services.Contracts;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -17,9 +14,9 @@ namespace GistSync.Core
 {
     public class GistSyncHost
     {
-        private IHost _host;
+        private IHost? _host;
 
-        public async Task Start(string[] args = null, Action<WebApplicationBuilder>? options = null, CancellationToken ct = default)
+        public async Task Start(string[] args = null!, Action<WebApplicationBuilder>? options = null, CancellationToken ct = default)
         {
             _host = CreateAppHost(args, options);
 

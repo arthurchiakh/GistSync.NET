@@ -52,7 +52,7 @@ namespace GistSync.Core
                     c.AddSingleton<IFileChecksumService, Md5FileChecksumService>();
                     c.AddSingleton<IGitHubApiService, GitHubApiService>();
                     c.AddSingleton<IAppDataService, DefaultAppDataService>();
-                    c.AddSingleton<ISyncTaskDataService, JsonSyncTaskDataService>();
+                    c.AddSingleton<ISyncTaskDataService, SyncTaskDataService>();
                     c.AddSingleton<IGistWatchFactory, GistWatchFactory>();
                     c.AddSingleton<IGistWatcherService, GistWatcherService>();
                     c.AddSingleton<IFileWatchFactory, FileWatchFactory>();

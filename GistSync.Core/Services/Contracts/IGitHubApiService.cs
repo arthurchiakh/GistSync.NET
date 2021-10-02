@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using GistSync.Core.Models.GitHub;
+#pragma warning disable 8625
 
 namespace GistSync.Core.Services.Contracts
 {
