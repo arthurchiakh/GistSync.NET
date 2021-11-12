@@ -1,0 +1,74 @@
+﻿@namespace GistSync.WebUI.Components
+
+<div class="modal @(IsVisible ? "d-block" : "")" tabindex="-1">
+    <div class="modal-dialog @(ClassWriter.Write("modal", Size))">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@Title</h5>
+                <button aria-label="Close"
+                        class="btn-close"
+                        @onclick="@Hide"
+                        type="button"></button>
+            </div>
+            <div class="modal-body">
+                @Content
+            </div>
+            <div class="modal-footer">
+                    <button class="btn btn-primary"
+                            hidden="@(!OkButton)"
+                            @onclick="@Ok"
+                            type="button">
+                        @OkButtonText
+                    </button>
+                    <button class="btn btn-secondary"
+                            hidden="@(!CloseButton)"
+                            @onclick="@Close"
+                            type="button">
+                        @CloseButtonText
+                    </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? Title { get; set; }
+    [Parameter]
+    public RenderFragment? Content { get; set; }
+    [Parameter]
+    public bool IsVisible { get; set; }
+    [Parameter]
+    public bool OkButton { get; set; } = false;
+    [Parameter]
+    public string OkButtonText { get; set; } = "Ok";
+    [Parameter]
+    public EventCallback OnOk { get; set; }
+    [Parameter]
+    public bool CloseButton { get; set; } = true;
+    [Parameter]
+    public string CloseButtonText { get; set; } = "Close";
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public Size Size { get; set; } = Size.Default;
+
+    public void Show() => IsVisible = true;
+    public void Hide() => IsVisible = false;
+
+    private async Task Ok()
+    {
+        await OnOk.InvokeAsync();
+        Hide();
+    }
+
+    private async Task Close()
+    {
+        await OnClose.InvokeAsync();
+        Hide();
+    }
+
+
+    
+}

@@ -1,22 +1,25 @@
-﻿@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
+﻿/* Import */
+@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
+
+/* Fonts */
+@font-face {
+  font-family: Gatafa;
+  src: url("../fonts/Gafata/Gafata-Regular.ttf");
+}
+
+@font-face {
+  font-family: Gelasio;
+  src: url("../fonts/Gelasio/Gelasio-Regular.ttf");
+}
 
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: Gelasio, sans-serif;
 }
 
-a, .btn-link {
-    color: #0077cc;
-}
-
-.btn-primary {
-    color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
-}
-
-.content {
-    padding-top: 1.1rem;
-}
+h1, h2, h3, h4, h5, h6 {
+    font-family: Gafata;
+    color: #000000;
+} 
 
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;

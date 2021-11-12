@@ -73,12 +73,17 @@ namespace GistSync.Core
             }
 
             app.UseHttpsRedirection();
-            app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();
             app.UseRouting();
             app.MapRazorPages();
             app.MapControllers();
-            app.MapFallbackToFile("index.html");
+            app.UseBlazorFrameworkFiles();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapDefaultControllerRoute();
+                endpoints.MapFallbackToFile("index.html");
+            });
 
             return app;
         }

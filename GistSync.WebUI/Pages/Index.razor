@@ -1,7 +1,72 @@
 ﻿@page "/"
+@inject HttpClient Http
 
-<h1>Hello, world!</h1>
+<h3>Sync Task</h3>
 
-Welcome to your new app. Test
+<button class="btn btn-success mb-3" @onclick="@ShowCreateModal">Create</button>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+<table class="table">
+    <thead>
+        <tr>
+            <th>Gist Id</th>
+            <th>Sync Strategy</th>
+            <th>File Name</th>
+            <th>Local File</th>
+            <th>Access Token</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var syncTask in _syncTasks)
+        {
+            <tr>
+                <td>@syncTask.GistId</td>
+                <td>@syncTask.SyncStrategyType</td>
+                <td>@syncTask.FileName</td>
+                <td>@syncTask.LocalFile</td>
+                <td>@syncTask.AccessToken</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<ModalDialog @ref="createSyncTaskModal" 
+             Title="Create New Sync Task" 
+             OkButtonText="Create"
+             OkButton="true"
+             CloseButton="false"
+             Size="Size.Large"
+             OnOk="@Create">
+    <Content>
+        <form>
+          <div class="mb-3">
+            <label for="GistId" class="form-label">Gist Id</label>
+            <input type="text" @bind="GistId" class="form-control" id="GistId" />
+            <div class="form-text">Id of the Gist</div>
+          </div>
+        </form>
+    </Content>
+</ModalDialog>
+
+@code {
+    public record SyncTask(string GistId, int SyncStrategyType, string FileName, string LocalFile, string AccessToken);
+
+    SyncTask[]? _syncTasks = Array.Empty<SyncTask>();
+    ModalDialog? createSyncTaskModal;
+
+    string GistId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _syncTasks = await Http.GetFromJsonAsync<SyncTask[]>("/sync-tasks");
+    }
+
+    void ShowCreateModal()
+    {
+        createSyncTaskModal?.Show();
+    }
+
+    void Create()
+    {
+        Console.WriteLine(GistId);
+    }
+} 

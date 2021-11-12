@@ -1,0 +1,20 @@
+﻿
+<div class="menu">
+    <div class="menu-hamburger" @onclick="ShowMenu">
+        <div/>
+        <div/>
+        <div/>
+    </div>
+    <div  class="menu-list @(_isShowMenu ? "show" : "hide")">
+        <NavLink href="/"  Match="NavLinkMatch.All" class="menu-list-item" @onclick="HideMenu">Sync Tasks</NavLink>
+        <NavLink href="/History"  class="menu-list-item" @onclick="HideMenu">History</NavLink>
+    </div> 
+</div>
+
+@code
+{
+    bool _isShowMenu;
+
+    public void ShowMenu() => _isShowMenu = true;
+    public void HideMenu() => _isShowMenu = false;
+}
