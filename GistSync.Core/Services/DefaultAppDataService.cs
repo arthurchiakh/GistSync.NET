@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.IO.Abstractions;
+using System.Reflection;
 using GistSync.Core.Services.Contracts;
 using FileSystem = System.IO.Abstractions.FileSystem;
 
@@ -18,7 +19,9 @@ namespace GistSync.Core.Services
             if (string.IsNullOrWhiteSpace(appDataDirectory))
                 throw new ArgumentNullException(nameof(appDataDirectory));
 
-            _appFolderFullPath = appDataDirectory;
+            var exePath =  Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            _appFolderFullPath = _fileSystem.Path.Combine(exePath, appDataDirectory);
+
             CreateAppDirectory();
         }
 
@@ -42,7 +45,7 @@ namespace GistSync.Core.Services
             combinePaths[0] = _appFolderFullPath;
             Array.Copy(relativeFilePaths, 0, combinePaths, 1, relativeFilePaths.Length);
 
-            return Path.Combine(combinePaths);
+            return _fileSystem.Path.Combine(combinePaths);
         }
     }
 }
