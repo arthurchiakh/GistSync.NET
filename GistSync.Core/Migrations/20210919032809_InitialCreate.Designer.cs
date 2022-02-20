@@ -32,18 +32,18 @@ namespace GistSync.Core.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("GistUpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("GitHubPersonalAccessToken")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("MappedLocalFilePath")
+                    b.Property<string>("Directory")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("SyncStrategyType")
+                    b.Property<int>("SyncMode")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("GistId");

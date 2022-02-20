@@ -10,7 +10,7 @@ namespace GistSync.Core.Tests
     public class DefaultAppDataServiceTests
     {
         private DefaultAppDataService _defaultAppDataService;
-        private static string _appFolderFullPath = @"./data";
+        private readonly static string _appFolderFullPath = @"./data";
         private IFileSystem _fileSystem;
 
         [SetUp]
@@ -56,7 +56,7 @@ namespace GistSync.Core.Tests
             Assert.AreEqual(expected, _defaultAppDataService.GetAbsolutePath(sections));
         }
 
-        private static IEnumerable<TestCaseData> _defaultAppDataServiceGetRelativePathReturnExpectedTestCases = new[]
+        private readonly static IEnumerable<TestCaseData> _defaultAppDataServiceGetRelativePathReturnExpectedTestCases = new[]
             {
                 new TestCaseData(new[] {"FolderA"}, Path.Combine(_appFolderFullPath, "FolderA")),
                 new TestCaseData(new[] {"FolderA", "FileB.txt"}, Path.Combine(_appFolderFullPath, "FolderA", "FileB.txt")),

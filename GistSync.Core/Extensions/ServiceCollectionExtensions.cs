@@ -13,7 +13,7 @@ namespace GistSync.Core.Extensions
     {
         public static void RegisterSyncStrategyProvider(this IServiceCollection serviceCollection)
         {
-            var strategyTypes = new Dictionary<SyncStrategyTypes, Type>();
+            var strategyTypes = new Dictionary<SyncModeTypes, Type>();
 
             var syncStrategyClassTypes = Assembly.GetExecutingAssembly().GetTypes()
                 .Where(t => t.IsClass && typeof(ISyncStrategy).IsAssignableFrom(t));
@@ -28,11 +28,11 @@ namespace GistSync.Core.Extensions
 
                 var associatedSyncType = (RegisterForSyncStrategyAttribute)associatedSyncTypeAttribute;
 
-                if (strategyTypes.ContainsKey(associatedSyncType.SyncStrategyType))
+                if (strategyTypes.ContainsKey(associatedSyncType.SyncModeType))
                     throw new InvalidOperationException($"Multiple implementations for sync type {associatedSyncType}.");
 
                 // Add to sync strategy type mapping
-                strategyTypes.Add(associatedSyncType.SyncStrategyType, syncStrategy);
+                strategyTypes.Add(associatedSyncType.SyncModeType, syncStrategy);
 
                 // Register to service collection
                 serviceCollection.AddSingleton(syncStrategy);

@@ -1,11 +1,13 @@
-﻿using GistSync.Core.Models;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using GistSync.Core.Models;
 
 namespace GistSync.Core.Services.Contracts
 {
     public interface ISyncTaskDataService
     {
-        SyncTask[] GetAllTasks();
-        void AddOrUpdateTask(SyncTask syncTask);
-        void RemoveTask(string gistId);
+        IEnumerable<SyncTask> GetAllTasks();
+        Task<int> AddOrUpdateTask(SyncTask syncTask);
+        Task<int> RemoveTask(string gistId);
     }
 }

@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using GistSync.Core.Models;
+﻿using GistSync.Core.Models;
 using GistSync.Core.Services.Contracts;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,9 +26,6 @@ namespace GistSync.Core
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<SyncTask>()
-                .ToTable("SyncTasks")
-                .HasKey(t => t.GistId);
         }
     }
 }

@@ -93,7 +93,7 @@ namespace GistSync.Core.Services
             }
         }
 
-        public string SynchronizedReadAllText(string filePath)
+        public string ReadAllText(string filePath)
         {
             var readerWriterLock = AcquireReaderWriterLock(filePath);
             readerWriterLock.EnterReadLock();

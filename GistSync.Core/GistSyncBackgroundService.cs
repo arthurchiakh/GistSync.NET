@@ -27,13 +27,13 @@ namespace GistSync.Core
             _syncStrategyProvider = syncStrategyProvider;
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             var tasks = _syncTaskDataService.GetAllTasks();
 
             foreach (var task in tasks)
             {
-                var strategy = _syncStrategyProvider.Provide(task.SyncStrategyType);
+                var strategy = _syncStrategyProvider.Provide(task.SyncMode);
                 strategy.Setup(task);
 
                 _gistSyncContexts[task.GistId] = strategy;

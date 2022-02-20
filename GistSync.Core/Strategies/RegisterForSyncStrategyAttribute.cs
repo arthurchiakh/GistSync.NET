@@ -11,11 +11,11 @@ namespace GistSync.Core.Strategies
     [AttributeUsage(System.AttributeTargets.Class)]
     public class RegisterForSyncStrategyAttribute : Attribute
     {
-        public SyncStrategyTypes SyncStrategyType { get; set; }
+        public SyncModeTypes SyncModeType { get; set; }
 
-        public RegisterForSyncStrategyAttribute(SyncStrategyTypes syncStrategyType)
+        public RegisterForSyncStrategyAttribute(SyncModeTypes syncModeType)
         {
-            SyncStrategyType = syncStrategyType;
+            SyncModeType = syncModeType;
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GistSync.Core.Models.GitHub;
@@ -20,7 +21,7 @@ namespace GistSync.Core.Services
         {
             var httpClient = new HttpClient { BaseAddress = new Uri(GITHUB_API_URL) };
             httpClient.DefaultRequestHeaders.Clear();
-            httpClient.DefaultRequestHeaders.UserAgent.Add(ProductInfoHeaderValue.Parse(Constants.AppName));
+            httpClient.DefaultRequestHeaders.UserAgent.Add(ProductInfoHeaderValue.Parse(AppConstants.AppName));
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
 
             if (!string.IsNullOrWhiteSpace(personalAccessToken))
@@ -40,7 +41,7 @@ namespace GistSync.Core.Services
             return await response.Content.ReadFromJsonAsync<Gist[]>(DefaultJsonSerializerOptions, ct);
         }
 
-        public async Task<Gist> Gist([NotNull] string gistId, string personalAccessToken = null!, CancellationToken ct = default)
+        public async Task<Gist> Gist(string gistId, string personalAccessToken = null!, CancellationToken ct = default)
         {
             var httpClient = ConstructHttpClient(personalAccessToken);
             var response = await httpClient.GetAsync($"gists/{gistId}", ct);
@@ -67,6 +68,22 @@ namespace GistSync.Core.Services
             response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadFromJsonAsync<Gist>(DefaultJsonSerializerOptions, ct);
+        }
+
+        public bool TryParseGistIdFromText(string text, out string gistId)
+        {
+            var regex = new Regex(@"(?:(?:(?:http|https):\/\/)?gist.github.com\/(?:.+?)/)?([0-9a-fA-F]{32})");
+            var match = regex.Match(text);
+
+            if (match.Success && !string.IsNullOrWhiteSpace(match.Groups[1].Value))
+            {
+                gistId = match.Groups[1].Value;
+
+                return true;
+            }
+
+            gistId = string.Empty;
+            return false;
         }
     }
 }

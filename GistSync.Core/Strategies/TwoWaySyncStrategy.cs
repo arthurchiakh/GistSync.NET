@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Abstractions;
 using GistSync.Core.Factories.Contracts;
 using GistSync.Core.Models;
@@ -9,7 +10,7 @@ using GistSync.Core.Strategies.Contracts;
 
 namespace GistSync.Core.Strategies
 {
-    [RegisterForSyncStrategy(SyncStrategyTypes.TwoWaySync)]
+    [RegisterForSyncStrategy(SyncModeTypes.TwoWaySync)]
     public class TwoWaySyncStrategy : ISyncStrategy
     {
         private readonly IFileSystem _fileSystem;
@@ -28,7 +29,7 @@ namespace GistSync.Core.Strategies
             IFileWatchFactory fileWatchFactory, IFileWatcherService fileWatcherService,
             ActiveSyncStrategy activeSyncStrategy, IGitHubApiService gitHubApiService,
             ISynchronizedFileAccessService synchronizedFileAccessService, IGistWatcherService gistWatcherService,
-            IFileChecksumService fileChecksumService, ISyncTaskDataService syncTaskDataService, 
+            IFileChecksumService fileChecksumService, ISyncTaskDataService syncTaskDataService,
             INotificationService notificationService)
         {
             _fileSystem = fileSystem;
@@ -46,10 +47,10 @@ namespace GistSync.Core.Strategies
         public TwoWaySyncStrategy(IFileWatchFactory fileWatchFactory, IFileWatcherService fileWatcherService,
             ActiveSyncStrategy activeSyncStrategy, IGitHubApiService gitHubApiService,
             ISynchronizedFileAccessService synchronizedFileAccessService, IGistWatcherService gistWatcherService,
-            IFileChecksumService fileChecksumService, ISyncTaskDataService syncTaskDataService, 
+            IFileChecksumService fileChecksumService, ISyncTaskDataService syncTaskDataService,
             INotificationService notificationService)
             : this(new FileSystem(), fileWatchFactory, fileWatcherService, activeSyncStrategy,
-                gitHubApiService, synchronizedFileAccessService, gistWatcherService, fileChecksumService, 
+                gitHubApiService, synchronizedFileAccessService, gistWatcherService, fileChecksumService,
                 syncTaskDataService, notificationService)
         {
         }
@@ -57,40 +58,43 @@ namespace GistSync.Core.Strategies
         public void Setup(SyncTask task)
         {
             // Setup file watch
-            var fileWatch = _fileWatchFactory.Create(task.MappedLocalFilePath,
-                task.FileChecksum,
-                async (sender, args) =>
-                {
-                    var content = _synchronizedFileAccessService.SynchronizedReadAllText(args.FilePath);
-                    if (string.IsNullOrWhiteSpace(content)) return;
-
-                    var updatedGist = await _gitHubApiService.PatchGist(task.GistId, new GistPatch
+            foreach (var file in task.Files)
+            {
+                var fileWatch = _fileWatchFactory.Create(Path.Combine(task.Directory, file.FileName),
+                    file.FileChecksum!,
+                    async (sender, args) =>
                     {
-                        Files = new Dictionary<string, FilePatch>
+                        var content = _synchronizedFileAccessService.ReadAllText(args.FilePath);
+                        if (string.IsNullOrWhiteSpace(content)) return;
+
+                        var updatedGist = await _gitHubApiService.PatchGist(task.GistId, new GistPatch
                         {
+                            Files = new Dictionary<string, FilePatch>
                             {
-                                task.GistFileName, new FilePatch
+                            {
+                                file.FileName, new FilePatch
                                 {
-                                    FileName = task.GistFileName,
+                                    FileName = file.FileName,
                                     Content = content
                                 }
                             }
-                        }
-                    }, task.GitHubPersonalAccessToken);
+                            }
+                        }, task.GitHubPersonalAccessToken!);
 
-                    // Prevent back sync occurs
-                    _gistWatcherService.OverrideGistUpdatedAtUtc(updatedGist.Id, updatedGist.UpdatedAt.Value);
+                        // Prevent back sync occurs
+                        _gistWatcherService.OverrideGistUpdatedAtUtc(updatedGist.Id, updatedGist.UpdatedAt!.Value);
 
-                    // Update UpdatedAtUtc datetime
-                    task.GistUpdatedAt = updatedGist.UpdatedAt;
-                    task.FileChecksum = args.Checksum;
-                    _syncTaskDataService.AddOrUpdateTask(task);
+                        // Update UpdatedAtUtc datetime
+                        task.UpdatedAt = updatedGist.UpdatedAt;
+                        file.FileChecksum = args.Checksum;
+                        await _syncTaskDataService.AddOrUpdateTask(task);
 
-                    // Notification
-                    _notificationService.NotifyGistUpdated(task.GistId);
-                });
+                        // Notification
+                        _notificationService.NotifyGistUpdated(task.GistId);
+                    });
 
-            _fileWatchUnsubscriber = _fileWatcherService.Subscribe(fileWatch);
+                _fileWatchUnsubscriber = _fileWatcherService.Subscribe(fileWatch);
+            }
 
             // Setup for ActiveSync
             _activeSyncStrategy.Setup(task);

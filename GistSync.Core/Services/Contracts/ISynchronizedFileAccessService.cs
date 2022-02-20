@@ -13,6 +13,6 @@ namespace GistSync.Core.Services.Contracts
         T SynchronizedReadStream<T>(string filePath, Func<Stream, T> func);
         void SynchronizedWriteStream(string filePath, FileMode fileMode, Action<Stream> action);
         T SynchronizedWriteStream<T>(string filePath, FileMode fileMode, Func<Stream, T> func);
-        string SynchronizedReadAllText(string filePath);
+        string ReadAllText(string filePath);
     }
 }
