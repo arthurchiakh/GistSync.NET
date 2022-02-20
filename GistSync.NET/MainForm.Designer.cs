@@ -31,6 +31,10 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.dgv_SyncTasks = new System.Windows.Forms.DataGridView();
+            this.GistId = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.SyncMode = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.UpdatedAt = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Directory = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.btn_Add = new System.Windows.Forms.Button();
             this.bgWorker = new System.ComponentModel.BackgroundWorker();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
@@ -40,14 +44,12 @@
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.nofityIconContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.GistId = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.SyncMode = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.UpdatedAt = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Directory = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.rtb_ActivityLog = new System.Windows.Forms.RichTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.dgv_SyncTasks)).BeginInit();
             this.flowLayoutPanel1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            this.tabPage2.SuspendLayout();
             this.nofityIconContextMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -74,6 +76,41 @@
             this.dgv_SyncTasks.Size = new System.Drawing.Size(666, 457);
             this.dgv_SyncTasks.TabIndex = 0;
             this.dgv_SyncTasks.CellContextMenuStripNeeded += new System.Windows.Forms.DataGridViewCellContextMenuStripNeededEventHandler(this.dgv_SyncTasks_CellContextMenuStripNeeded);
+            // 
+            // GistId
+            // 
+            this.GistId.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.GistId.DataPropertyName = "GistId";
+            this.GistId.HeaderText = "Gist Id";
+            this.GistId.Name = "GistId";
+            this.GistId.ReadOnly = true;
+            this.GistId.Width = 65;
+            // 
+            // SyncMode
+            // 
+            this.SyncMode.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.SyncMode.DataPropertyName = "SyncMode";
+            this.SyncMode.HeaderText = "SyncMode";
+            this.SyncMode.Name = "SyncMode";
+            this.SyncMode.ReadOnly = true;
+            this.SyncMode.Width = 88;
+            // 
+            // UpdatedAt
+            // 
+            this.UpdatedAt.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.UpdatedAt.DataPropertyName = "UpdatedAt";
+            this.UpdatedAt.HeaderText = "Updated At";
+            this.UpdatedAt.Name = "UpdatedAt";
+            this.UpdatedAt.ReadOnly = true;
+            this.UpdatedAt.Width = 92;
+            // 
+            // Directory
+            // 
+            this.Directory.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Directory.DataPropertyName = "Directory";
+            this.Directory.HeaderText = "Directory";
+            this.Directory.Name = "Directory";
+            this.Directory.ReadOnly = true;
             // 
             // btn_Add
             // 
@@ -124,6 +161,7 @@
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.rtb_ActivityLog);
             this.tabPage2.Location = new System.Drawing.Point(4, 24);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
@@ -154,40 +192,17 @@
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
-            // GistId
+            // rtb_ActivityLog
             // 
-            this.GistId.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.GistId.DataPropertyName = "GistId";
-            this.GistId.HeaderText = "Gist Id";
-            this.GistId.Name = "GistId";
-            this.GistId.ReadOnly = true;
-            this.GistId.Width = 65;
-            // 
-            // SyncMode
-            // 
-            this.SyncMode.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.SyncMode.DataPropertyName = "SyncMode";
-            this.SyncMode.HeaderText = "SyncMode";
-            this.SyncMode.Name = "SyncMode";
-            this.SyncMode.ReadOnly = true;
-            this.SyncMode.Width = 88;
-            // 
-            // UpdatedAt
-            // 
-            this.UpdatedAt.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.UpdatedAt.DataPropertyName = "UpdatedAt";
-            this.UpdatedAt.HeaderText = "Updated At";
-            this.UpdatedAt.Name = "UpdatedAt";
-            this.UpdatedAt.ReadOnly = true;
-            this.UpdatedAt.Width = 92;
-            // 
-            // Directory
-            // 
-            this.Directory.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Directory.DataPropertyName = "Directory";
-            this.Directory.HeaderText = "Directory";
-            this.Directory.Name = "Directory";
-            this.Directory.ReadOnly = true;
+            this.rtb_ActivityLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.rtb_ActivityLog.Location = new System.Drawing.Point(6, 6);
+            this.rtb_ActivityLog.Name = "rtb_ActivityLog";
+            this.rtb_ActivityLog.ReadOnly = true;
+            this.rtb_ActivityLog.Size = new System.Drawing.Size(666, 436);
+            this.rtb_ActivityLog.TabIndex = 0;
+            this.rtb_ActivityLog.Text = "";
             // 
             // MainForm
             // 
@@ -203,6 +218,7 @@
             this.flowLayoutPanel1.ResumeLayout(false);
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
+            this.tabPage2.ResumeLayout(false);
             this.nofityIconContextMenu.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -224,5 +240,6 @@
         private ContextMenuStrip nofityIconContextMenu;
         private ToolStripMenuItem exitToolStripMenuItem;
         private DataGridViewTextBoxColumn GistId;
+        private RichTextBox rtb_ActivityLog;
     }
 }

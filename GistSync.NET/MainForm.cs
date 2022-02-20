@@ -5,6 +5,7 @@ using GistSync.Core.Services.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using GistSync.NET.Services;
 
 namespace GistSync.NET
 {
@@ -19,6 +20,7 @@ namespace GistSync.NET
             var hostBuilder = GistSyncCoreHost.CreateDefaultHostBuilder();
             hostBuilder.ConfigureServices(services =>
             {
+                services.AddSingleton<INotificationService, WindowsNotificationService>();
                 services.AddTransient<NewTaskForm>();
             });
 
