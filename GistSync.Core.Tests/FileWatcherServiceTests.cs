@@ -48,8 +48,8 @@ namespace GistSync.Core.Tests
         {
             var triggerFlag = false;
 
-            var watch = _fileWatchFactory.Create(_filePath, null,
-                (sender, args) => triggerFlag = true );
+            var watch = _fileWatchFactory.Create(_filePath, _fileChecksumService.ComputeChecksumByFilePath(_filePath),
+                (sender, args) => triggerFlag = true);
 
             _fileWatcherService.Subscribe(watch);
             _fileSystem.File.AppendAllText(_filePath, string.Empty);

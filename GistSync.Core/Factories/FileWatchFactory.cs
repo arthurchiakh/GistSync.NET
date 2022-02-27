@@ -33,15 +33,17 @@ namespace GistSync.Core.Factories
             var fileWatch = new FileWatch
             {
                 FilePath = normalizedFilePath,
-                Checksum = checksum ?? latestChecksum,
+                Checksum = (string.IsNullOrEmpty(checksum) ? latestChecksum : checksum) ?? string.Empty,
                 ModifiedDateTimeUtc = _fileSystem.File.GetLastWriteTimeUtc(normalizedFilePath)
             };
 
             fileWatch.FileContentChangedEvent += fileContentChangedEvent;
 
             // Pick up unhandled file content changed
-            if (checksum != null && checksum != latestChecksum)
-               fileWatch.TriggerFileContentChanged();
+            if (string.IsNullOrEmpty(checksum) &&
+                string.IsNullOrEmpty(latestChecksum) &&
+                checksum != latestChecksum)
+                fileWatch.TriggerFileContentChanged();
 
             return fileWatch;
         }
