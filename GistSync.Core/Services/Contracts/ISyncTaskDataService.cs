@@ -8,6 +8,6 @@ namespace GistSync.Core.Services.Contracts
     {
         IEnumerable<SyncTask> GetAllTasks();
         Task<int> AddOrUpdateTask(SyncTask syncTask);
-        Task<int> RemoveTask(string gistId);
+        Task<int> RemoveTask(int id);
     }
 }

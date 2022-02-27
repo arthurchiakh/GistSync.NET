@@ -9,10 +9,12 @@ namespace GistSync.NET
     public partial class MainForm : Form
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly ISyncTaskDataService _syncTaskDataService;
 
-        public MainForm(IServiceProvider serviceProvider)
+        public MainForm(IServiceProvider serviceProvider, ISyncTaskDataService syncTaskDataService)
         {
             _serviceProvider = serviceProvider;
+            _syncTaskDataService = syncTaskDataService;
             InitializeComponent();
 
             LoadSyncTasks();
@@ -27,7 +29,7 @@ namespace GistSync.NET
 
         private void LoadSyncTasks()
         {
-            var syncTasks = _serviceProvider.GetRequiredService<ISyncTaskDataService>().GetAllTasks();
+            var syncTasks = _syncTaskDataService.GetAllTasks();
             dgv_SyncTasks.AutoGenerateColumns = false;
             dgv_SyncTasks.DataSource = syncTasks;
         }
@@ -52,6 +54,13 @@ namespace GistSync.NET
                         FileName = $"https://gist.github.com/{syncTask.GistId}",
                         UseShellExecute = true
                     });
+                });
+
+            // Item Menu: Remove task
+            syncTaskContextMenu.Items.Add("Remove", null, async (_, _) =>
+                {
+                    await _syncTaskDataService.RemoveTask(syncTask.Id);
+                    LoadSyncTasks();
                 });
 
             // Select row

@@ -32,10 +32,17 @@ namespace GistSync.Core.Services
             return _dbContext.SyncTasks.Include(t => t.Files).ToList();
         }
 
-        public Task<int> RemoveTask(string gistId)
+        public async Task<int> RemoveTask(int id)
         {
-            _dbContext.SyncTasks.Remove(new SyncTask { GistId = gistId });
-            return _dbContext.SaveChangesAsync();
+            var syncTask = await _dbContext.SyncTasks.FirstOrDefaultAsync(t => t.Id == id);
+
+            if (syncTask != null)
+            {
+                _dbContext.SyncTasks.Remove(syncTask);
+                return await _dbContext.SaveChangesAsync();
+            }
+
+            return 0;
         }
     }
 }
