@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using GistSync.Core.Models;
 using GistSync.Core.Services.Contracts;
-using Microsoft.Extensions.DependencyInjection;
 using GistSync.NET.Utils;
 
 namespace GistSync.NET
@@ -59,8 +58,12 @@ namespace GistSync.NET
             // Item Menu: Remove task
             syncTaskContextMenu.Items.Add("Remove", null, async (_, _) =>
                 {
-                    await _syncTaskDataService.RemoveTask(syncTask.Id);
-                    LoadSyncTasks();
+                    var dialogResult = MessageBox.Show("Are you sure to remove?", "Remove Task", MessageBoxButtons.YesNo);
+                    if (dialogResult == DialogResult.Yes)
+                    {
+                        await _syncTaskDataService.RemoveTask(syncTask.Id);
+                        LoadSyncTasks();
+                    }
                 });
 
             // Select row
@@ -91,7 +94,8 @@ namespace GistSync.NET
             WindowState = FormWindowState.Normal;
         }
 
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e) {
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
             Close();
             Environment.Exit(0);
         }

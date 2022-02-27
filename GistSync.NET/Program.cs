@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using GistSync.Core;
 using GistSync.Core.Services.Contracts;
 using GistSync.NET.Services;
