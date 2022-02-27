@@ -15,7 +15,8 @@ namespace GistSync.Core.Migrations
                     SyncMode = table.Column<int>(type: "INTEGER", nullable: false), 
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     Directory = table.Column<string>(type: "TEXT", nullable: false),
-                    GitHubPersonalAccessToken = table.Column<string>(type: "TEXT", nullable: true)
+                    GitHubPersonalAccessToken = table.Column<string>(type: "TEXT", nullable: true),
+                    IsEnabled = table.Column<bool>()
                 },
                 constraints: table =>
                 {

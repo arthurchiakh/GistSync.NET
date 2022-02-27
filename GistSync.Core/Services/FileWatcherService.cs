@@ -21,7 +21,6 @@ namespace GistSync.Core.Services
             _fileChecksumService = fileChecksumService;
             _fileSystemWatchers = new Dictionary<string, IFileSystemWatcher>();
             _fileWatches = new Dictionary<string, IList<FileWatch>>();
-
         }
 
         public FileWatcherService(IFileChecksumService fileChecksumService) : this(new FileSystem(), fileChecksumService)

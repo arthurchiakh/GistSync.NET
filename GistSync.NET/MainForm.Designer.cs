@@ -32,19 +32,19 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.dgv_SyncTasks = new System.Windows.Forms.DataGridView();
             this.GistId = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Enabled = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.SyncMode = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.UpdatedAt = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Directory = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.btn_Add = new System.Windows.Forms.Button();
-            this.bgWorker = new System.ComponentModel.BackgroundWorker();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.rtb_ActivityLog = new System.Windows.Forms.RichTextBox();
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.nofityIconContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.rtb_ActivityLog = new System.Windows.Forms.RichTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.dgv_SyncTasks)).BeginInit();
             this.flowLayoutPanel1.SuspendLayout();
             this.tabControl1.SuspendLayout();
@@ -63,6 +63,7 @@
             this.dgv_SyncTasks.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgv_SyncTasks.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.GistId,
+            this.Enabled,
             this.SyncMode,
             this.UpdatedAt,
             this.Directory});
@@ -85,6 +86,15 @@
             this.GistId.Name = "GistId";
             this.GistId.ReadOnly = true;
             this.GistId.Width = 65;
+            // 
+            // Enabled
+            // 
+            this.Enabled.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.Enabled.DataPropertyName = "IsEnabled";
+            this.Enabled.HeaderText = "Enabled";
+            this.Enabled.Name = "Enabled";
+            this.Enabled.ReadOnly = true;
+            this.Enabled.Width = 74;
             // 
             // SyncMode
             // 
@@ -170,6 +180,18 @@
             this.tabPage2.Text = "Activity Log";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // rtb_ActivityLog
+            // 
+            this.rtb_ActivityLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.rtb_ActivityLog.Location = new System.Drawing.Point(6, 6);
+            this.rtb_ActivityLog.Name = "rtb_ActivityLog";
+            this.rtb_ActivityLog.ReadOnly = true;
+            this.rtb_ActivityLog.Size = new System.Drawing.Size(666, 436);
+            this.rtb_ActivityLog.TabIndex = 0;
+            this.rtb_ActivityLog.Text = "";
+            // 
             // notifyIcon
             // 
             this.notifyIcon.ContextMenuStrip = this.nofityIconContextMenu;
@@ -191,18 +213,6 @@
             this.exitToolStripMenuItem.Size = new System.Drawing.Size(93, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
-            // 
-            // rtb_ActivityLog
-            // 
-            this.rtb_ActivityLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.rtb_ActivityLog.Location = new System.Drawing.Point(6, 6);
-            this.rtb_ActivityLog.Name = "rtb_ActivityLog";
-            this.rtb_ActivityLog.ReadOnly = true;
-            this.rtb_ActivityLog.Size = new System.Drawing.Size(666, 436);
-            this.rtb_ActivityLog.TabIndex = 0;
-            this.rtb_ActivityLog.Text = "";
             // 
             // MainForm
             // 
@@ -226,12 +236,8 @@
 
         #endregion
         private Button btn_Add;
-        protected System.ComponentModel.BackgroundWorker bgWorker;
         private DataGridView dgv_SyncTasks;
         private DataGridViewTextBoxColumn Id;
-        private DataGridViewTextBoxColumn SyncMode;
-        private DataGridViewTextBoxColumn UpdatedAt;
-        private DataGridViewTextBoxColumn Directory;
         private FlowLayoutPanel flowLayoutPanel1;
         private TabControl tabControl1;
         private TabPage tabPage1;
@@ -239,7 +245,11 @@
         private NotifyIcon notifyIcon;
         private ContextMenuStrip nofityIconContextMenu;
         private ToolStripMenuItem exitToolStripMenuItem;
-        private DataGridViewTextBoxColumn GistId;
         private RichTextBox rtb_ActivityLog;
+        private DataGridViewTextBoxColumn GistId;
+        private DataGridViewTextBoxColumn Enabled;
+        private DataGridViewTextBoxColumn SyncMode;
+        private DataGridViewTextBoxColumn UpdatedAt;
+        private DataGridViewTextBoxColumn Directory;
     }
 }

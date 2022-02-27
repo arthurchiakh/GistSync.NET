@@ -1,4 +1,6 @@
-﻿using GistSync.Core.Models;
+﻿using System.Diagnostics;
+using System.Net;
+using GistSync.Core.Models;
 using GistSync.Core.Services.Contracts;
 using GistSync.NET.Utils;
 
@@ -17,7 +19,7 @@ namespace GistSync.NET
             InitializeComponent();
 
             foreach (var strategy in Enum.GetNames(typeof(SyncModeTypes)))
-                cb_SyncMode.Items.Add($"{strategy} Sync");
+                cb_SyncMode.Items.Add($"{strategy}");
 
             cb_SyncMode.SelectedIndex = 0;
         }
@@ -40,9 +42,16 @@ namespace GistSync.NET
 
                         btn_Add.Enabled = true;
                     }
+                    catch (HttpRequestException httpRequestEx)
+                    {
+                        if(httpRequestEx.StatusCode is HttpStatusCode.TooManyRequests) 
+                            MessageBox.Show("Too many request."); 
+                        else
+                            MessageBox.Show("Can't find gist repo by the entered id/url.");
+                    }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Can't find gist repo by the entered id/url.");
+                        MessageBox.Show($"Error: {ex.Message}");
                     }
                 }
                 else
@@ -68,10 +77,12 @@ namespace GistSync.NET
                         GistId = gistId,
                         SyncMode = GetSelectedStrategyTypes(),
                         Directory = tb_Path.Text,
-                        Files = cbl_Files.CheckedItems.Cast<string>().Select(ci => new SyncTaskFile { FileName = ci }).ToList()
+                        Files = cbl_Files.CheckedItems.Cast<string>().Select(ci => new SyncTaskFile { FileName = ci }).ToList(),
+                        GitHubPersonalAccessToken = tb_PersonalAccessToken.Text,
+                        IsEnabled = true
                     });
 
-                    if (updateResponse == 0)
+                    if (updateResponse > 0)
                         Close();
                     else
                         MessageBox.Show("Unable to add new item");
@@ -100,5 +111,28 @@ namespace GistSync.NET
                 1 => SyncModeTypes.TwoWaySync,
                 _ => throw new Exception("Unable to get selected sync strategy")
             };
+
+        private void ll_PersonalAccessToken_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "https://github.com/settings/tokens",
+                UseShellExecute = true
+            });
+        }
+
+        private void cb_SyncMode_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // Show personal access token 
+            if (cb_SyncMode.SelectedIndex == 0)
+            {
+                tb_PersonalAccessToken.Enabled = false;
+                tb_PersonalAccessToken.Clear();
+            }
+            else
+            {
+                tb_PersonalAccessToken.Enabled = true;
+            }
+        }
     }
 }

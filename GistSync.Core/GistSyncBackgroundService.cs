@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GistSync.Core.Extensions;
@@ -31,7 +32,7 @@ namespace GistSync.Core
         {
             var tasks = _syncTaskDataService.GetAllTasks();
 
-            foreach (var task in tasks)
+            foreach (var task in tasks.Where(t => t.IsEnabled))
             {
                 var strategy = _syncStrategyProvider.Provide(task.SyncMode);
                 strategy.Setup(task);

@@ -18,6 +18,7 @@ namespace GistSync.Core.Models
         public string Directory { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? GitHubPersonalAccessToken { get; set; }
+        public bool IsEnabled { get; set; }
         public ICollection<SyncTaskFile> Files { get; set; } 
     }
  }

@@ -1,53 +1,33 @@
 using System.Diagnostics;
-using GistSync.Core;
 using GistSync.Core.Models;
 using GistSync.Core.Services.Contracts;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using GistSync.NET.Services;
+using GistSync.NET.Utils;
 
 namespace GistSync.NET
 {
     public partial class MainForm : Form
     {
-        private readonly IHost _host;
+        private readonly IServiceProvider _serviceProvider;
 
-        public MainForm()
+        public MainForm(IServiceProvider serviceProvider)
         {
+            _serviceProvider = serviceProvider;
             InitializeComponent();
-
-            var hostBuilder = GistSyncCoreHost.CreateDefaultHostBuilder();
-            hostBuilder.ConfigureServices(services =>
-            {
-                services.AddSingleton<INotificationService, WindowsNotificationService>();
-                services.AddTransient<NewTaskForm>();
-            });
-
-            // Build host
-            _host = hostBuilder.Build();
-
-            // Hook GistSyncHost to background service
-            bgWorker.DoWork += async (sender, args) =>
-            {
-                await _host.Services.GetRequiredService<GistSyncDbContext>().Database.MigrateAsync()!;
-                await _host.RunAsync();
-            };
-            bgWorker.RunWorkerAsync();
 
             LoadSyncTasks();
         }
 
         private void btn_Add_Click(object sender, EventArgs e)
         {
-            var newItemForm = _host.Services.GetRequiredService<NewTaskForm>();
+            var newItemForm = _serviceProvider.GetForm<NewTaskForm>();
             newItemForm.StartPosition = FormStartPosition.CenterParent;
             newItemForm.ShowDialog(this);
         }
 
         private void LoadSyncTasks()
         {
-            var syncTasks = _host.Services.GetRequiredService<ISyncTaskDataService>().GetAllTasks();
+            var syncTasks = _serviceProvider.GetRequiredService<ISyncTaskDataService>().GetAllTasks();
             dgv_SyncTasks.AutoGenerateColumns = false;
             dgv_SyncTasks.DataSource = syncTasks;
         }
