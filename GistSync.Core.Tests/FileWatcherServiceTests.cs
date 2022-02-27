@@ -62,7 +62,7 @@ namespace GistSync.Core.Tests
         }
 
         [Test]
-        public void FileWatcherService_WriteToFile_ContentNoChange_ExpectTriggerEvent()
+        public void FileWatcherService_WriteToFile_ContentChanged_ExpectTriggerEvent()
         {
             var triggerFlag = false;
 

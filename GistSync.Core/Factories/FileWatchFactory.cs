@@ -1,4 +1,5 @@
-﻿using System.IO.Abstractions;
+﻿using System.IO;
+using System.IO.Abstractions;
 using GistSync.Core.Factories.Contracts;
 using GistSync.Core.Models;
 using GistSync.Core.Services.Contracts;
@@ -23,7 +24,11 @@ namespace GistSync.Core.Factories
         public FileWatch Create(string filePath, string checksum, FileContentChangedEventHandler fileContentChangedEvent)
         {
             var normalizedFilePath = _fileSystem.Path.GetFullPath(filePath);
-            var latestChecksum = _fileChecksumService.ComputeChecksumByFilePath(normalizedFilePath);
+
+            // If file not found, don't write checksum
+            var latestChecksum = File.Exists(normalizedFilePath)
+                ? _fileChecksumService.ComputeChecksumByFilePath(normalizedFilePath)
+                : null;
 
             var fileWatch = new FileWatch
             {

@@ -9,7 +9,7 @@ namespace GistSync.Core.Services
 {
     public class DefaultAppDataService : IAppDataService
     {
-        private readonly string _appFolderFullPath;
+        private readonly string _appDataDirectory;
         private readonly IFileSystem _fileSystem;
 
         internal DefaultAppDataService(IFileSystem fileSystem, string appDataDirectory = "./data/")
@@ -19,8 +19,7 @@ namespace GistSync.Core.Services
             if (string.IsNullOrWhiteSpace(appDataDirectory))
                 throw new ArgumentNullException(nameof(appDataDirectory));
 
-            var exePath =  Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            _appFolderFullPath = _fileSystem.Path.Combine(exePath, appDataDirectory);
+            _appDataDirectory = appDataDirectory;
 
             CreateAppDirectory();
         }
@@ -31,18 +30,18 @@ namespace GistSync.Core.Services
 
         public void CreateAppDirectory()
         {
-            if (!_fileSystem.Directory.Exists(_appFolderFullPath)) _fileSystem.Directory.CreateDirectory(_appFolderFullPath);
+            if (!_fileSystem.Directory.Exists(_appDataDirectory)) _fileSystem.Directory.CreateDirectory(_appDataDirectory);
         }
 
         public void DeleteAppDirectory()
         {
-            if (_fileSystem.Directory.Exists(_appFolderFullPath)) _fileSystem.Directory.Delete(_appFolderFullPath);
+            if (_fileSystem.Directory.Exists(_appDataDirectory)) _fileSystem.Directory.Delete(_appDataDirectory);
         }
 
         public string GetAbsolutePath(params string[] relativeFilePaths)
         {
             var combinePaths = new string[relativeFilePaths.Length + 1];
-            combinePaths[0] = _appFolderFullPath;
+            combinePaths[0] = _appDataDirectory;
             Array.Copy(relativeFilePaths, 0, combinePaths, 1, relativeFilePaths.Length);
 
             return _fileSystem.Path.Combine(combinePaths);

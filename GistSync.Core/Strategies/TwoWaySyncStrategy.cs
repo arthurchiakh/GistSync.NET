@@ -57,6 +57,9 @@ namespace GistSync.Core.Strategies
 
         public void Setup(SyncTask task)
         {
+            // Setup for ActiveSync
+            _activeSyncStrategy.Setup(task);
+
             // Setup file watch
             foreach (var file in task.Files)
             {
@@ -95,9 +98,6 @@ namespace GistSync.Core.Strategies
 
                 _fileWatchUnsubscriber = _fileWatcherService.Subscribe(fileWatch);
             }
-
-            // Setup for ActiveSync
-            _activeSyncStrategy.Setup(task);
         }
 
         public void Destroy()

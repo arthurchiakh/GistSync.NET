@@ -46,8 +46,8 @@ namespace GistSync.Core.Services
             if (string.IsNullOrWhiteSpace(fileWatch.FilePath))
                 throw new ArgumentNullException(fileWatch.FilePath); // GIGO
 
-            if (!_fileSystem.File.Exists(fileWatch.FilePath))
-                throw new FileNotFoundException(fileWatch.FilePath);
+            //if (!_fileSystem.File.Exists(fileWatch.FilePath))
+            //    throw new FileNotFoundException(fileWatch.FilePath);
 
             // Register file watch
             if (!_fileWatches.ContainsKey(fileWatch.FilePath))
@@ -74,12 +74,14 @@ namespace GistSync.Core.Services
         private void OnFileChanged(object sender, FileSystemEventArgs args)
         {
             var normalizedFilePath = _fileSystem.Path.GetFullPath(args.FullPath);
+
             // Compute file hash for comparison
             var newFileHash = _fileChecksumService.ComputeChecksumByFilePath(normalizedFilePath);
             var modifiedDate = File.GetLastWriteTimeUtc(normalizedFilePath);
             foreach (var watch in _fileWatches[normalizedFilePath])
             {
-                if (!watch.Checksum.Equals(newFileHash, StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrEmpty(watch.Checksum) || // The file not yet download.
+                    !watch.Checksum.Equals(newFileHash, StringComparison.OrdinalIgnoreCase))
                 {
                     watch.ModifiedDateTimeUtc = modifiedDate;
                     watch.Checksum = newFileHash;
