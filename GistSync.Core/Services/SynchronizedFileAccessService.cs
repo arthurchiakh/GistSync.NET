@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
@@ -11,12 +12,12 @@ namespace GistSync.Core.Services
     public class SynchronizedFileAccessService : ISynchronizedFileAccessService
     {
         private readonly IFileSystem _fileSystem;
-        private readonly IDictionary<string, ReaderWriterLockSlim> _fileStreamReaderWriterLocks;
+        private readonly IDictionary<string, Lazy<ReaderWriterLockSlim>> _fileStreamReaderWriterLocks;
 
         internal SynchronizedFileAccessService(IFileSystem fileSystem)
         {
             _fileSystem = fileSystem;
-            _fileStreamReaderWriterLocks = new Dictionary<string, ReaderWriterLockSlim>();
+            _fileStreamReaderWriterLocks = new ConcurrentDictionary<string, Lazy<ReaderWriterLockSlim>>();
         }
 
         public SynchronizedFileAccessService() : this(new FileSystem())
@@ -122,9 +123,9 @@ namespace GistSync.Core.Services
             var normalizedFilePath = _fileSystem.Path.GetFullPath(filePath);
 
             if (!_fileStreamReaderWriterLocks.ContainsKey(normalizedFilePath))
-                _fileStreamReaderWriterLocks[normalizedFilePath] = new ReaderWriterLockSlim();
+                _fileStreamReaderWriterLocks[normalizedFilePath] = new Lazy<ReaderWriterLockSlim>(() => new ReaderWriterLockSlim());
 
-            return _fileStreamReaderWriterLocks[normalizedFilePath];
+            return _fileStreamReaderWriterLocks[normalizedFilePath].Value;
         }
     }
 }
