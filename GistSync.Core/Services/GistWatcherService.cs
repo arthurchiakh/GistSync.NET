@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Timers;
 using GistSync.Core.Models;
 using GistSync.Core.Services.Contracts;
@@ -46,25 +47,30 @@ namespace GistSync.Core.Services
         {
             lock (_watchesLock)
             {
-                _watches.Values.AsParallel().ForAll(async w =>
+                var tasks = _watches.Values.Select(w => new Task(async w =>
                 {
+                    if (w is not GistWatch gistWatch) return;
+
                     await _semaphoreSlim.WaitAsync();
 
                     try
                     {
-                        var gist = await _gitHubApiService.Gist(w.GistId, w.PersonalAccessToken);
-                        if (w.UpdatedAtUtc != gist.UpdatedAt)
+                        var gist = await _gitHubApiService.Gist(gistWatch.GistId, gistWatch.PersonalAccessToken);
+                        if (gistWatch.UpdatedAtUtc != gist.UpdatedAt)
                         {
-                            w.Files = gist.Files.Select(kv => kv.Value).ToArray();
-                            w.UpdatedAtUtc = gist.UpdatedAt;
-                            w.TriggerGistUpdatedEvent();
+                            gistWatch.Files = gist.Files.Select(kv => kv.Value).ToArray();
+                            gistWatch.UpdatedAtUtc = gist.UpdatedAt;
+                            gistWatch.TriggerGistUpdatedEvent();
                         }
                     }
                     finally
                     {
                         _semaphoreSlim.Release();
                     }
-                });
+
+                }, w));
+
+                Task.WhenAll(tasks);
 
                 _timer.Interval = TimeSpan.FromSeconds(_config.GetValue("Gist:StatusRefreshIntervalSeconds", 300)).TotalMilliseconds;
                 _timer.Start();
