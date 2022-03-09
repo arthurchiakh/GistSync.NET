@@ -2,6 +2,7 @@ using System.Diagnostics;
 using GistSync.Core.Models;
 using GistSync.Core.Services.Contracts;
 using GistSync.NET.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace GistSync.NET
 {
@@ -9,12 +10,16 @@ namespace GistSync.NET
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ISyncTaskDataService _syncTaskDataService;
+        private readonly ILogger<MainForm> _logger;
 
-        public MainForm(IServiceProvider serviceProvider, ISyncTaskDataService syncTaskDataService)
+        public MainForm(IServiceProvider serviceProvider, ISyncTaskDataService syncTaskDataService, ILogger<MainForm> logger)
         {
             _serviceProvider = serviceProvider;
             _syncTaskDataService = syncTaskDataService;
+            _logger = logger;
             InitializeComponent();
+
+            ActivityLogger.Connect(rtb_ActivityLog);
 
             LoadSyncTasks();
         }
@@ -75,7 +80,10 @@ namespace GistSync.NET
             e.ContextMenuStrip = syncTaskContextMenu;
         }
 
-        private void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e) => ShowUpFromTray();
+        private void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            ShowUpFromTray();
+        }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {

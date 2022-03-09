@@ -5,6 +5,8 @@ using GistSync.NET.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using WindowsFormsLifetime;
 
 namespace GistSync.NET
@@ -20,20 +22,21 @@ namespace GistSync.NET
         async static Task Main()
         {
             var hostBuilder = GistSyncCoreHost.CreateDefaultHostBuilder();
-            hostBuilder
-                .UseWindowsFormsLifetime<MainForm>(options =>
+            hostBuilder.UseWindowsFormsLifetime<MainForm>(options =>
             {
                 options.HighDpiMode = HighDpiMode.SystemAware;
                 options.EnableVisualStyles = true;
                 options.CompatibleTextRenderingDefault = false;
                 options.SuppressStatusMessages = false;
                 options.EnableConsoleShutdown = true;
-            })
-                .ConfigureServices(services =>
+            }).ConfigureServices(services =>
             {
                 services.AddSingleton<INotificationService, WindowsNotificationService>();
                 services.AddForm<MainForm>();
                 services.AddForm<NewTaskForm>();
+            }).ConfigureLogging(logBuilder =>
+            {
+                logBuilder.AddActivityLogger();
             });
 
             // Build host
