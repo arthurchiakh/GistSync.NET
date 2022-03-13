@@ -107,5 +107,17 @@ namespace GistSync.NET
             Close();
             Environment.Exit(0);
         }
+
+        private void btn_SaveToFile_Click(object sender, EventArgs e)
+        {
+            saveFileDialog.FileName = $"GistSync.NET-{DateTime.Now:yyyyMMdd-HHmmss}";
+            saveFileDialog.DefaultExt = "txt";
+            saveFileDialog.Filter = "Text files (*.txt)|*.txt";
+
+            var dialogResult = saveFileDialog.ShowDialog(this);
+
+            if (dialogResult == DialogResult.OK)
+                rtb_ActivityLog.SaveFile(saveFileDialog.FileName, RichTextBoxStreamType.UnicodePlainText);
+        }
     }
 }

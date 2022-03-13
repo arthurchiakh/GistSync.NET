@@ -41,10 +41,12 @@
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.btn_SaveToFile = new System.Windows.Forms.Button();
             this.rtb_ActivityLog = new System.Windows.Forms.RichTextBox();
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.nofityIconContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
             ((System.ComponentModel.ISupportInitialize)(this.dgv_SyncTasks)).BeginInit();
             this.flowLayoutPanel1.SuspendLayout();
             this.tabControl1.SuspendLayout();
@@ -171,6 +173,7 @@
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.btn_SaveToFile);
             this.tabPage2.Controls.Add(this.rtb_ActivityLog);
             this.tabPage2.Location = new System.Drawing.Point(4, 24);
             this.tabPage2.Name = "tabPage2";
@@ -180,6 +183,16 @@
             this.tabPage2.Text = "Activity Log";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // btn_SaveToFile
+            // 
+            this.btn_SaveToFile.Location = new System.Drawing.Point(597, 474);
+            this.btn_SaveToFile.Name = "btn_SaveToFile";
+            this.btn_SaveToFile.Size = new System.Drawing.Size(75, 23);
+            this.btn_SaveToFile.TabIndex = 1;
+            this.btn_SaveToFile.Text = "Save to File";
+            this.btn_SaveToFile.UseVisualStyleBackColor = true;
+            this.btn_SaveToFile.Click += new System.EventHandler(this.btn_SaveToFile_Click);
+            // 
             // rtb_ActivityLog
             // 
             this.rtb_ActivityLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -188,7 +201,7 @@
             this.rtb_ActivityLog.Location = new System.Drawing.Point(6, 6);
             this.rtb_ActivityLog.Name = "rtb_ActivityLog";
             this.rtb_ActivityLog.ReadOnly = true;
-            this.rtb_ActivityLog.Size = new System.Drawing.Size(666, 436);
+            this.rtb_ActivityLog.Size = new System.Drawing.Size(666, 462);
             this.rtb_ActivityLog.TabIndex = 0;
             this.rtb_ActivityLog.Text = "";
             // 
@@ -213,6 +226,10 @@
             this.exitToolStripMenuItem.Size = new System.Drawing.Size(93, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            // 
+            // saveFileDialog
+            // 
+            this.saveFileDialog.DefaultExt = "txt";
             // 
             // MainForm
             // 
@@ -251,5 +268,7 @@
         private DataGridViewTextBoxColumn SyncMode;
         private DataGridViewTextBoxColumn UpdatedAt;
         private DataGridViewTextBoxColumn Directory;
+        private Button btn_SaveToFile;
+        private SaveFileDialog saveFileDialog;
     }
 }
