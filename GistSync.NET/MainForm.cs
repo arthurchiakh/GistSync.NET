@@ -3,32 +3,35 @@ using GistSync.Core.Models;
 using GistSync.Core.Services.Contracts;
 using GistSync.NET.Utils;
 using Microsoft.Extensions.Logging;
+using WindowsFormsLifetime;
 
 namespace GistSync.NET
 {
     public partial class MainForm : Form
     {
+        private readonly ILogger<MainForm> _logger;
         private readonly IServiceProvider _serviceProvider;
         private readonly ISyncTaskDataService _syncTaskDataService;
-        private readonly ILogger<MainForm> _logger;
 
-        public MainForm(IServiceProvider serviceProvider, ISyncTaskDataService syncTaskDataService, ILogger<MainForm> logger)
+        public MainForm(ILogger<MainForm> logger, ISyncTaskDataService syncTaskDataService, IServiceProvider serviceProvider)
         {
-            _serviceProvider = serviceProvider;
-            _syncTaskDataService = syncTaskDataService;
-            _logger = logger;
             InitializeComponent();
+            _syncTaskDataService = syncTaskDataService;
+            _serviceProvider = serviceProvider;
+            _logger = logger;
+        }
 
+        protected override void OnLoad(EventArgs e)
+        {
             ActivityLogger.Connect(rtb_ActivityLog);
-
             LoadSyncTasks();
         }
 
+        #region Tab - Tasks
+
         private void btn_Add_Click(object sender, EventArgs e)
         {
-            var newItemForm = _serviceProvider.GetForm<NewTaskForm>();
-            newItemForm.StartPosition = FormStartPosition.CenterParent;
-            newItemForm.ShowDialog(this);
+            _serviceProvider.GetForm<NewTaskForm>().ShowDialog(this);
         }
 
         private void LoadSyncTasks()
@@ -80,6 +83,26 @@ namespace GistSync.NET
             e.ContextMenuStrip = syncTaskContextMenu;
         }
 
+        #endregion
+
+        #region  Tab - Activity Log
+
+        private void btn_SaveToFile_Click(object sender, EventArgs e)
+        {
+            saveFileDialog.FileName = $"GistSync.NET-{DateTime.Now:yyyyMMdd-HHmmss}";
+            saveFileDialog.DefaultExt = "txt";
+            saveFileDialog.Filter = "Text files (*.txt)|*.txt";
+
+            var dialogResult = saveFileDialog.ShowDialog(this);
+
+            if (dialogResult == DialogResult.OK)
+                rtb_ActivityLog.SaveFile(saveFileDialog.FileName, RichTextBoxStreamType.UnicodePlainText);
+        }
+
+        #endregion
+
+        #region Notify Icon
+
         private void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             ShowUpFromTray();
@@ -108,16 +131,26 @@ namespace GistSync.NET
             Environment.Exit(0);
         }
 
-        private void btn_SaveToFile_Click(object sender, EventArgs e)
+        #endregion
+
+        #region Menu Strip
+
+        private void menuItem_Exit_Click(object sender, EventArgs e)
         {
-            saveFileDialog.FileName = $"GistSync.NET-{DateTime.Now:yyyyMMdd-HHmmss}";
-            saveFileDialog.DefaultExt = "txt";
-            saveFileDialog.Filter = "Text files (*.txt)|*.txt";
-
-            var dialogResult = saveFileDialog.ShowDialog(this);
-
-            if (dialogResult == DialogResult.OK)
-                rtb_ActivityLog.SaveFile(saveFileDialog.FileName, RichTextBoxStreamType.UnicodePlainText);
+            Environment.Exit(0);
         }
+
+        private void menuItem_Settings_Click(object sender, EventArgs e)
+        {
+            _serviceProvider.GetForm<SettingsForm>().ShowDialog(this);
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            _serviceProvider.GetForm<AboutForm>().ShowDialog(this);
+        }
+
+        #endregion
+
     }
 }

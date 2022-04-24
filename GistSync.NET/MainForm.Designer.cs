@@ -47,12 +47,20 @@
             this.nofityIconContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
+            this.menuStripMain = new System.Windows.Forms.MenuStrip();
+            this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItem_Exit = new System.Windows.Forms.ToolStripMenuItem();
+            this.settingsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItem_Settings = new System.Windows.Forms.ToolStripMenuItem();
+            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.dgv_SyncTasks)).BeginInit();
             this.flowLayoutPanel1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.nofityIconContextMenu.SuspendLayout();
+            this.menuStripMain.SuspendLayout();
             this.SuspendLayout();
             // 
             // dgv_SyncTasks
@@ -76,7 +84,7 @@
             this.dgv_SyncTasks.ReadOnly = true;
             this.dgv_SyncTasks.RowTemplate.Height = 25;
             this.dgv_SyncTasks.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgv_SyncTasks.Size = new System.Drawing.Size(666, 457);
+            this.dgv_SyncTasks.Size = new System.Drawing.Size(666, 435);
             this.dgv_SyncTasks.TabIndex = 0;
             this.dgv_SyncTasks.CellContextMenuStripNeeded += new System.Windows.Forms.DataGridViewCellContextMenuStripNeededEventHandler(this.dgv_SyncTasks_CellContextMenuStripNeeded);
             // 
@@ -153,10 +161,10 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Controls.Add(this.tabPage2);
-            this.tabControl1.Location = new System.Drawing.Point(12, 5);
+            this.tabControl1.Location = new System.Drawing.Point(12, 27);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(686, 531);
+            this.tabControl1.Size = new System.Drawing.Size(686, 509);
             this.tabControl1.TabIndex = 3;
             // 
             // tabPage1
@@ -166,7 +174,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 24);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(678, 503);
+            this.tabPage1.Size = new System.Drawing.Size(678, 481);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Tasks";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -178,14 +186,15 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 24);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(678, 503);
+            this.tabPage2.Size = new System.Drawing.Size(678, 481);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Activity Log";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
             // btn_SaveToFile
             // 
-            this.btn_SaveToFile.Location = new System.Drawing.Point(597, 474);
+            this.btn_SaveToFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btn_SaveToFile.Location = new System.Drawing.Point(597, 452);
             this.btn_SaveToFile.Name = "btn_SaveToFile";
             this.btn_SaveToFile.Size = new System.Drawing.Size(75, 23);
             this.btn_SaveToFile.TabIndex = 1;
@@ -201,7 +210,7 @@
             this.rtb_ActivityLog.Location = new System.Drawing.Point(6, 6);
             this.rtb_ActivityLog.Name = "rtb_ActivityLog";
             this.rtb_ActivityLog.ReadOnly = true;
-            this.rtb_ActivityLog.Size = new System.Drawing.Size(666, 462);
+            this.rtb_ActivityLog.Size = new System.Drawing.Size(666, 440);
             this.rtb_ActivityLog.TabIndex = 0;
             this.rtb_ActivityLog.Text = "";
             // 
@@ -231,13 +240,72 @@
             // 
             this.saveFileDialog.DefaultExt = "txt";
             // 
+            // menuStripMain
+            // 
+            this.menuStripMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.settingsToolStripMenuItem,
+            this.settingsToolStripMenuItem1,
+            this.helpToolStripMenuItem});
+            this.menuStripMain.Location = new System.Drawing.Point(0, 0);
+            this.menuStripMain.Name = "menuStripMain";
+            this.menuStripMain.Size = new System.Drawing.Size(710, 24);
+            this.menuStripMain.TabIndex = 4;
+            this.menuStripMain.Text = "menuStrip1";
+            // 
+            // settingsToolStripMenuItem
+            // 
+            this.settingsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuItem_Exit});
+            this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
+            this.settingsToolStripMenuItem.Text = "File";
+            // 
+            // menuItem_Exit
+            // 
+            this.menuItem_Exit.Name = "menuItem_Exit";
+            this.menuItem_Exit.Size = new System.Drawing.Size(93, 22);
+            this.menuItem_Exit.Text = "Exit";
+            this.menuItem_Exit.Click += new System.EventHandler(this.menuItem_Exit_Click);
+            // 
+            // settingsToolStripMenuItem1
+            // 
+            this.settingsToolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuItem_Settings});
+            this.settingsToolStripMenuItem1.Name = "settingsToolStripMenuItem1";
+            this.settingsToolStripMenuItem1.Size = new System.Drawing.Size(61, 20);
+            this.settingsToolStripMenuItem1.Text = "Settings";
+            // 
+            // menuItem_Settings
+            // 
+            this.menuItem_Settings.Name = "menuItem_Settings";
+            this.menuItem_Settings.Size = new System.Drawing.Size(116, 22);
+            this.menuItem_Settings.Text = "Settings";
+            this.menuItem_Settings.Click += new System.EventHandler(this.menuItem_Settings_Click);
+            // 
+            // helpToolStripMenuItem
+            // 
+            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.aboutToolStripMenuItem});
+            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.helpToolStripMenuItem.Text = "Help";
+            // 
+            // aboutToolStripMenuItem
+            // 
+            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.aboutToolStripMenuItem.Text = "About";
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(710, 548);
+            this.Controls.Add(this.menuStripMain);
             this.Controls.Add(this.tabControl1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MainMenuStrip = this.menuStripMain;
             this.Name = "MainForm";
             this.Text = "GistSync.NET";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
@@ -247,7 +315,10 @@
             this.tabPage1.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
             this.nofityIconContextMenu.ResumeLayout(false);
+            this.menuStripMain.ResumeLayout(false);
+            this.menuStripMain.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -270,5 +341,12 @@
         private DataGridViewTextBoxColumn Directory;
         private Button btn_SaveToFile;
         private SaveFileDialog saveFileDialog;
+        private MenuStrip menuStripMain;
+        private ToolStripMenuItem settingsToolStripMenuItem;
+        private ToolStripMenuItem menuItem_Exit;
+        private ToolStripMenuItem settingsToolStripMenuItem1;
+        private ToolStripMenuItem menuItem_Settings;
+        private ToolStripMenuItem helpToolStripMenuItem;
+        private ToolStripMenuItem aboutToolStripMenuItem;
     }
 }

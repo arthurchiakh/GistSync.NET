@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using GistSync.Core.Models;
 using GistSync.Core.Services.Contracts;
+using GistSync.Core.Utils;
 using Microsoft.Extensions.Configuration;
 using Timer = System.Timers.Timer;
 
@@ -26,7 +27,7 @@ namespace GistSync.Core.Services
             _gitHubApiService = gitHubApiService;
             _config = config;
 
-            _semaphoreSlim = new SemaphoreSlim(_config.GetValue("Gist:MaxConcurrentGistStatusCheck", 5));
+            _semaphoreSlim = new SemaphoreSlim(_config.GetOrSet("Gist:MaxConcurrentGistStatusCheck", 5));
             _watches = new Dictionary<string, GistWatch>();
             _watchCounter = new Dictionary<string, int>();
             _watchesLock = new object();
@@ -51,7 +52,7 @@ namespace GistSync.Core.Services
             {
                 Task.WhenAll(_watches.Values.Select(PerformGistWatch)).Wait();
 
-                _timer.Interval = TimeSpan.FromSeconds(_config.GetValue("Gist:StatusRefreshIntervalSeconds", 300)).TotalMilliseconds;
+                _timer.Interval = TimeSpan.FromSeconds(_config.GetOrSet("Gist:StatusRefreshIntervalSeconds", 300)).TotalMilliseconds;
                 _timer.Start();
             }
         }

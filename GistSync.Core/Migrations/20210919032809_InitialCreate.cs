@@ -41,6 +41,21 @@ namespace GistSync.Core.Migrations
                         onDelete: ReferentialAction.Cascade
                     );
                 });
+
+            migrationBuilder.CreateTable(
+                name: "Settings",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false),
+                    Key = table.Column<string>(type: "TEXT", nullable: false),
+                    Value = table.Column<string>(type: "TEXT"),
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Settings", x => x.Id);
+                });
+
+            migrationBuilder.CreateIndex("IDX_Settings_Key", "Settings", "Key");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

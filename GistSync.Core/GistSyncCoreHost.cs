@@ -3,6 +3,8 @@ using GistSync.Core.Factories;
 using GistSync.Core.Factories.Contracts;
 using GistSync.Core.Services;
 using GistSync.Core.Services.Contracts;
+using GistSync.Core.Utils;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -28,6 +30,10 @@ public class GistSyncCoreHost
             services.AddSingleton<INotificationService, DefaultNotificationService>();
             services.RegisterSyncStrategyProvider();
             services.AddHostedService<GistSyncBackgroundService>();
+        }).ConfigureAppConfiguration(configBuilder =>
+        {
+            configBuilder.Sources.Clear();
+            configBuilder.Add(new DatabaseConfigurationSource(new GistSyncDbContext(new DefaultAppDataService(), new DbContextOptions<GistSyncDbContext>())));
         });
 
         return builder;

@@ -2,7 +2,6 @@ using GistSync.Core;
 using GistSync.Core.Services.Contracts;
 using GistSync.NET.Services;
 using GistSync.NET.Utils;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using WindowsFormsLifetime;
@@ -29,9 +28,13 @@ namespace GistSync.NET
                 options.EnableConsoleShutdown = true;
             }).ConfigureServices(services =>
             {
-                services.AddSingleton<INotificationService, WindowsNotificationService>();
-                services.AddForm<MainForm>();
+                // Forms
                 services.AddForm<NewTaskForm>();
+                services.AddForm<SettingsForm>();
+                services.AddForm<AboutForm>();
+
+                // Override notification
+                services.AddSingleton<INotificationService, WindowsNotificationService>();
             }).ConfigureLogging(logBuilder =>
             {
                 logBuilder.AddActivityLogger();
@@ -39,7 +42,6 @@ namespace GistSync.NET
 
             // Build host
             _host = hostBuilder.Build();
-            await _host.Services.GetRequiredService<GistSyncDbContext>().Database.MigrateAsync()!;
             await _host.RunAsync();
         }
     }

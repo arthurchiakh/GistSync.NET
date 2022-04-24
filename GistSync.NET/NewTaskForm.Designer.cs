@@ -230,6 +230,7 @@
             this.MinimumSize = new System.Drawing.Size(600, 400);
             this.Name = "NewTaskForm";
             this.ShowIcon = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "New Task";
             this.tlp_NewTask.ResumeLayout(false);
             this.tlp_NewTask.PerformLayout();
