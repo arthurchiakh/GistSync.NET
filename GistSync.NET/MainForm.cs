@@ -1,9 +1,9 @@
 using System.Diagnostics;
+using GistSync.Core;
 using GistSync.Core.Models;
 using GistSync.Core.Services.Contracts;
 using GistSync.NET.Utils;
 using Microsoft.Extensions.Logging;
-using WindowsFormsLifetime;
 
 namespace GistSync.NET
 {
@@ -12,18 +12,21 @@ namespace GistSync.NET
         private readonly ILogger<MainForm> _logger;
         private readonly IServiceProvider _serviceProvider;
         private readonly ISyncTaskDataService _syncTaskDataService;
+        private readonly GistSyncBackgroundService _gistSyncBackgroundService;
 
-        public MainForm(ILogger<MainForm> logger, ISyncTaskDataService syncTaskDataService, IServiceProvider serviceProvider)
+        public MainForm(ILogger<MainForm> logger, ISyncTaskDataService syncTaskDataService, IServiceProvider serviceProvider,
+            GistSyncBackgroundService gistSyncBackgroundService)
         {
             InitializeComponent();
             _syncTaskDataService = syncTaskDataService;
             _serviceProvider = serviceProvider;
+            _gistSyncBackgroundService = gistSyncBackgroundService;
             _logger = logger;
         }
 
         protected override void OnLoad(EventArgs e)
         {
-            ActivityLogger.Connect(rtb_ActivityLog);
+            ActivityLogger.Connect(SynchronizationContext.Current!, rtb_ActivityLog);
             LoadSyncTasks();
         }
 
@@ -31,14 +34,21 @@ namespace GistSync.NET
 
         private void btn_Add_Click(object sender, EventArgs e)
         {
-            _serviceProvider.GetForm<NewTaskForm>().ShowDialog(this);
+            var newTaskForm = _serviceProvider.GetForm<NewTaskForm>();
+            newTaskForm.OnNewTaskAdded(LoadSyncTasks);
+            newTaskForm.ShowDialog(this);
         }
 
-        private void LoadSyncTasks()
+        private async void LoadSyncTasks()
         {
-            var syncTasks = _syncTaskDataService.GetAllTasks();
+            var syncTasks = await _syncTaskDataService.GetAllTasks();
             dgv_SyncTasks.AutoGenerateColumns = false;
             dgv_SyncTasks.DataSource = syncTasks;
+        }
+
+        private void refreshToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            LoadSyncTasks();
         }
 
         private void dgv_SyncTasks_CellContextMenuStripNeeded(object sender, DataGridViewCellContextMenuStripNeededEventArgs e)
@@ -50,7 +60,7 @@ namespace GistSync.NET
 
             // ItemMenu: Open Folder in File Explorer
             syncTaskContextMenu.Items.Add("Open Folder In File Explorer", null,
-                (_, _) => { Process.Start("explorer.exe", syncTask.Directory); });
+                (_, _) => Process.Start("explorer.exe", @$"/select,""{Path.Combine(syncTask.Directory, syncTask.Files.First().FileName)}\"""));
 
             // ItemMenu: View Gist
             syncTaskContextMenu.Items.Add("View Gist", null,
@@ -70,9 +80,34 @@ namespace GistSync.NET
                     if (dialogResult == DialogResult.Yes)
                     {
                         await _syncTaskDataService.RemoveTask(syncTask.Id);
+                        _gistSyncBackgroundService.StopSyncTaskById(syncTask.Id);
                         LoadSyncTasks();
                     }
                 });
+
+            // Item Menu: Disable/Enable
+            if (syncTask.IsEnabled)
+                syncTaskContextMenu.Items.Add("Disable", null, async (_, _) =>
+                    {
+                        var dialogResult = MessageBox.Show("Are you sure to disable?", "Disable Task", MessageBoxButtons.YesNo);
+                        if (dialogResult == DialogResult.Yes)
+                        {
+                            await _syncTaskDataService.DisableTask(syncTask.Id);
+                            _gistSyncBackgroundService.StopSyncTaskById(syncTask.Id);
+                            LoadSyncTasks();
+                        }
+                    });
+            else
+                syncTaskContextMenu.Items.Add("Enable", null, async (_, _) =>
+                    {
+                        var dialogResult = MessageBox.Show("Are you sure to enable?", "Enable Task", MessageBoxButtons.YesNo);
+                        if (dialogResult == DialogResult.Yes)
+                        {
+                            await _syncTaskDataService.EnableTask(syncTask.Id);
+                            _gistSyncBackgroundService.StartSyncTask(syncTask);
+                            LoadSyncTasks();
+                        }
+                    });
 
             // Select row
             dgv_SyncTasks.ClearSelection();
@@ -99,6 +134,11 @@ namespace GistSync.NET
                 rtb_ActivityLog.SaveFile(saveFileDialog.FileName, RichTextBoxStreamType.UnicodePlainText);
         }
 
+        private void rtb_ActivityLog_ContextMenu_Clear_Click(object sender, EventArgs e)
+        {
+            rtb_ActivityLog.Clear();
+        }
+
         #endregion
 
         #region Notify Icon
@@ -121,6 +161,7 @@ namespace GistSync.NET
 
         public void ShowUpFromTray()
         {
+            LoadSyncTasks();
             Show();
             WindowState = FormWindowState.Normal;
         }
@@ -151,6 +192,5 @@ namespace GistSync.NET
         }
 
         #endregion
-
     }
 }

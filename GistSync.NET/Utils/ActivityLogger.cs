@@ -10,6 +10,7 @@ namespace GistSync.NET.Utils
     {
         private readonly static IList<(LogLevel logLevel, string logMessage)> BufferMessage = new List<(LogLevel, string)>();
         private static RichTextBox? _connectedRichTextBox;
+        private static SynchronizationContext? _syncContext;
 
         public IDisposable BeginScope<TState>(TState state) => default!;
 
@@ -26,27 +27,22 @@ namespace GistSync.NET.Utils
         {
             if (!IsEnabled(logLevel)) return;
 
-            var logMessage = $"{DateTime.Now:yyyy/MM/dd-HH:mm:ss} - {formatter(state, exception)}\n";
+            var logMessage = $"{logLevel}: {DateTime.Now:yyyy/MM/dd-HH:mm:ss} - {formatter(state, exception)}\n";
 
             if (_connectedRichTextBox is null)
                 BufferMessage.Add((logLevel, logMessage)); // Add to buffer if the rich text box is not ready.
             else
-            {
-                _connectedRichTextBox.ForeColor = GetColorByLogLevel(logLevel);
-                _connectedRichTextBox.AppendText(logMessage);
-            }
+                PrintMessage(logLevel, logMessage);
         }
 
-        public static void Connect(RichTextBox richTextBox)
+        public static void Connect(SynchronizationContext syncContext, RichTextBox richTextBox)
         {
+            _syncContext = syncContext;
             _connectedRichTextBox = richTextBox;
 
             // Once connected, flush the buffered log messages
             foreach (var (logLevel, logMessage) in BufferMessage)
-            {
-                _connectedRichTextBox.ForeColor = GetColorByLogLevel(logLevel);
-                _connectedRichTextBox.AppendText(logMessage);
-            }
+                PrintMessage(logLevel, logMessage);
 
             BufferMessage.Clear();
         }
@@ -58,6 +54,23 @@ namespace GistSync.NET.Utils
             LogLevel.Warning => Color.Yellow,
             _ => Color.Black
         };
+
+        private static void PrintMessage(LogLevel logLevel, string logMessage)
+        {
+            if (_connectedRichTextBox == null) return;
+
+            if (_syncContext == null)
+            {
+                _connectedRichTextBox.ForeColor = GetColorByLogLevel(logLevel);
+                _connectedRichTextBox.AppendText(logMessage);
+            }
+            else
+                _syncContext.Send(s =>
+                {
+                    _connectedRichTextBox.ForeColor = GetColorByLogLevel(logLevel);
+                    _connectedRichTextBox.AppendText(logMessage);
+                }, null);
+        }
     }
 
     public class ActivityLoggerProvider : ILoggerProvider

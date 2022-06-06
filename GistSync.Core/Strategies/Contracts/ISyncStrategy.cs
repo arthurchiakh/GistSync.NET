@@ -6,5 +6,6 @@ namespace GistSync.Core.Strategies.Contracts
     {
         void Setup(SyncTask task);
         void Destroy();
+        string GistId { get; }
     }
 }

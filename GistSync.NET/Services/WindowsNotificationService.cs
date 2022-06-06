@@ -8,20 +8,16 @@ namespace GistSync.NET.Services
         public void NotifyFileUpdated(string filePath)
         {
             new ToastContentBuilder()
-                //.AddArgument("action", "viewConversation")
-                //.AddArgument("conversationId", 9813)
-                .AddText("File updated.")
-                .AddText(filePath)
+                .AddText($"{Path.GetFileName(filePath)} has been updated due to Gist content changed.")
+                .SetProtocolActivation(new Uri($"file://{filePath}"))
                 .Show();
         }
 
         public void NotifyGistUpdated(string gistId)
         {
             new ToastContentBuilder()
-                //.AddArgument("action", "viewConversation")
-                //.AddArgument("conversationId", 9813)
-                .AddText("Gist updated.")
-                .AddText(gistId)
+                .AddText($"Gist {gistId} has been updated due to local file changed.")
+                .SetProtocolActivation(new Uri($"https://gist.github.com/{gistId}"))
                 .Show();
         }
     }

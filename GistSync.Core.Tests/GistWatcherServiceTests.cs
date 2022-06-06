@@ -7,6 +7,7 @@ using GistSync.Core.Models.GitHub;
 using GistSync.Core.Services;
 using GistSync.Core.Services.Contracts;
 using GistSync.Core.Tests.Utils;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 
@@ -33,8 +34,11 @@ namespace GistSync.Core.Tests
             // Mock Configuration
             var config = ConfigurationUtil.MockConfiguration();
 
+            // Mock Logger
+            var logger = new Mock<ILogger<GistWatcherService>>().Object;
+
             // Create service
-            _gistWatcherService = new GistWatcherService(gitHubApiServiceMock.Object, config);
+            _gistWatcherService = new GistWatcherService(gitHubApiServiceMock.Object, config, logger);
 
             var triggerFlag = false;
 

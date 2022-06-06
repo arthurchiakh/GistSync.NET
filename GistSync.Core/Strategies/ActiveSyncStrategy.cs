@@ -13,14 +13,15 @@ namespace GistSync.Core.Strategies
     [RegisterForSyncStrategy(SyncModeTypes.ActiveSync)]
     public class ActiveSyncStrategy : ISyncStrategy
     {
-        private readonly IFileSystem _fileSystem;
-        private readonly IGistWatchFactory _gistWatchFactory;
-        private readonly IGistWatcherService _gistWatcherService;
-        private readonly IFileChecksumService _fileChecksumService;
-        private readonly ISyncTaskDataService _syncTaskDataService;
-        private readonly ISynchronizedFileAccessService _synchronizedFileAccessService;
-        private readonly IGitHubApiService _gitHubApiService;
-        private readonly INotificationService _notificationService;
+        protected SyncTask _syncTask;
+        protected readonly IFileSystem _fileSystem;
+        protected readonly IGistWatchFactory _gistWatchFactory;
+        protected readonly IGistWatcherService _gistWatcherService;
+        protected readonly IFileChecksumService _fileChecksumService;
+        protected readonly ISyncTaskDataService _syncTaskDataService;
+        protected readonly ISynchronizedFileAccessService _synchronizedFileAccessService;
+        protected readonly IGitHubApiService _gitHubApiService;
+        protected readonly INotificationService _notificationService;
         private IDisposable _gistWatchUnsubscriber;
 
         internal ActiveSyncStrategy(IFileSystem fileSystem,
@@ -40,16 +41,17 @@ namespace GistSync.Core.Strategies
         }
 
         public ActiveSyncStrategy(IGistWatchFactory gistWatchFactory, IGistWatcherService gistWatcherService,
-                                    IFileChecksumService fileShChecksumService, ISyncTaskDataService syncTaskDataService,
+                                    IFileChecksumService fileChecksumService, ISyncTaskDataService syncTaskDataService,
                                     ISynchronizedFileAccessService synchronizedFileAccessService, IGitHubApiService gitHubApiService,
                                     INotificationService notificationService)
-            : this(new FileSystem(), gistWatchFactory, gistWatcherService, fileShChecksumService,
+            : this(new FileSystem(), gistWatchFactory, gistWatcherService, fileChecksumService,
                 syncTaskDataService, synchronizedFileAccessService, gitHubApiService, notificationService)
         {
         }
 
-        public void Setup(SyncTask task)
+        public virtual void Setup(SyncTask task)
         {
+            _syncTask = task;
             // Create watch object
             var gistWatch = _gistWatchFactory.Create(task.GistId,
                 async (sender, args) =>
@@ -92,18 +94,20 @@ namespace GistSync.Core.Strategies
                         await _syncTaskDataService.AddOrUpdateTask(task);
 
                         // Notification
-                        _notificationService.NotifyFileUpdated(task.Directory);
+                        _notificationService.NotifyFileUpdated(targetFilePath);
                     }
                 },
                 task.UpdatedAt,
-                task.GitHubPersonalAccessToken);
+                task.GitHubPersonalAccessToken!);
 
             _gistWatchUnsubscriber = _gistWatcherService.Subscribe(gistWatch);
         }
 
-        public void Destroy()
+        public virtual void Destroy()
         {
             _gistWatchUnsubscriber.Dispose();
         }
+
+        public virtual string GistId => _syncTask.GistId;
     }
 }

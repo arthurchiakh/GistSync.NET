@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Net;
+using GistSync.Core;
 using GistSync.Core.Models;
 using GistSync.Core.Services.Contracts;
 using GistSync.NET.Utils;
@@ -10,11 +11,15 @@ namespace GistSync.NET
     {
         private readonly IGitHubApiService _gitHubApiService;
         private readonly ISyncTaskDataService _syncTaskDataService;
+        private readonly GistSyncBackgroundService _gistSyncBackgroundService;
+        private Action _newTaskAddedAction;
 
-        public NewTaskForm(IGitHubApiService gitHubApiService, ISyncTaskDataService syncTaskDataService)
+        public NewTaskForm(IGitHubApiService gitHubApiService, ISyncTaskDataService syncTaskDataService,
+            GistSyncBackgroundService gistSyncBackgroundService)
         {
             _gitHubApiService = gitHubApiService;
             _syncTaskDataService = syncTaskDataService;
+            _gistSyncBackgroundService = gistSyncBackgroundService;
 
             InitializeComponent();
 
@@ -22,6 +27,11 @@ namespace GistSync.NET
                 cb_SyncMode.Items.Add($"{strategy}");
 
             cb_SyncMode.SelectedIndex = 0;
+        }
+
+        public void OnNewTaskAdded(Action onSuccessfulAction)
+        {
+            _newTaskAddedAction = onSuccessfulAction;
         }
 
         private void tb_GistId_TextChanged(object sender, EventArgs e)
@@ -44,8 +54,8 @@ namespace GistSync.NET
                     }
                     catch (HttpRequestException httpRequestEx)
                     {
-                        if(httpRequestEx.StatusCode is HttpStatusCode.TooManyRequests) 
-                            MessageBox.Show("Too many request."); 
+                        if (httpRequestEx.StatusCode is HttpStatusCode.TooManyRequests)
+                            MessageBox.Show("Too many request.");
                         else
                             MessageBox.Show("Can't find gist repo by the entered id/url.");
                     }
@@ -72,18 +82,24 @@ namespace GistSync.NET
             {
                 if (ValidatePath(tb_Path.Text))
                 {
-                    var updateResponse = await _syncTaskDataService.AddOrUpdateTask(new SyncTask
-                    {
+                    var newSyncTask = new SyncTask {
                         GistId = gistId,
                         SyncMode = GetSelectedStrategyTypes(),
                         Directory = tb_Path.Text,
-                        Files = cbl_Files.CheckedItems.Cast<string>().Select(ci => new SyncTaskFile { FileName = ci }).ToList(),
+                        Files = cbl_Files.CheckedItems.Cast<string>().Select(ci => new SyncTaskFile {FileName = ci})
+                            .ToList(),
                         GitHubPersonalAccessToken = tb_PersonalAccessToken.Text,
                         IsEnabled = true
-                    });
+                    };
 
-                    if (updateResponse > 0)
+                    var updateResult = await _syncTaskDataService.AddOrUpdateTask(newSyncTask);
+
+                    if (updateResult > 0)
+                    {
+                        _gistSyncBackgroundService.StartSyncTask(newSyncTask);
+                        _newTaskAddedAction();
                         Close();
+                    }
                     else
                         MessageBox.Show("Unable to add new item");
                 }

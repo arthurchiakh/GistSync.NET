@@ -31,11 +31,8 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.dgv_SyncTasks = new System.Windows.Forms.DataGridView();
-            this.GistId = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Enabled = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.SyncMode = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.UpdatedAt = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Directory = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgv_SyncTasks_ContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.refreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.btn_Add = new System.Windows.Forms.Button();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -43,6 +40,8 @@
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.btn_SaveToFile = new System.Windows.Forms.Button();
             this.rtb_ActivityLog = new System.Windows.Forms.RichTextBox();
+            this.rtb_ActivityLog_ContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.rtb_ActivityLog_ContextMenu_Clear = new System.Windows.Forms.ToolStripMenuItem();
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.nofityIconContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -54,11 +53,18 @@
             this.menuItem_Settings = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.Directory = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.UpdatedAt = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.SyncMode = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Enabled = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.GistId = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dgv_SyncTasks)).BeginInit();
+            this.dgv_SyncTasks_ContextMenu.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
+            this.rtb_ActivityLog_ContextMenu.SuspendLayout();
             this.nofityIconContextMenu.SuspendLayout();
             this.menuStripMain.SuspendLayout();
             this.SuspendLayout();
@@ -77,6 +83,7 @@
             this.SyncMode,
             this.UpdatedAt,
             this.Directory});
+            this.dgv_SyncTasks.ContextMenuStrip = this.dgv_SyncTasks_ContextMenu;
             this.dgv_SyncTasks.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnF2;
             this.dgv_SyncTasks.GridColor = System.Drawing.SystemColors.Window;
             this.dgv_SyncTasks.Location = new System.Drawing.Point(6, 40);
@@ -88,49 +95,20 @@
             this.dgv_SyncTasks.TabIndex = 0;
             this.dgv_SyncTasks.CellContextMenuStripNeeded += new System.Windows.Forms.DataGridViewCellContextMenuStripNeededEventHandler(this.dgv_SyncTasks_CellContextMenuStripNeeded);
             // 
-            // GistId
+            // dgv_SyncTasks_ContextMenu
             // 
-            this.GistId.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.GistId.DataPropertyName = "GistId";
-            this.GistId.HeaderText = "Gist Id";
-            this.GistId.Name = "GistId";
-            this.GistId.ReadOnly = true;
-            this.GistId.Width = 65;
+            this.dgv_SyncTasks_ContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.refreshToolStripMenuItem});
+            this.dgv_SyncTasks_ContextMenu.Name = "nofityIconContextMenu";
+            this.dgv_SyncTasks_ContextMenu.Size = new System.Drawing.Size(114, 26);
+            this.dgv_SyncTasks_ContextMenu.Text = "Refresh";
             // 
-            // Enabled
+            // refreshToolStripMenuItem
             // 
-            this.Enabled.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.Enabled.DataPropertyName = "IsEnabled";
-            this.Enabled.HeaderText = "Enabled";
-            this.Enabled.Name = "Enabled";
-            this.Enabled.ReadOnly = true;
-            this.Enabled.Width = 74;
-            // 
-            // SyncMode
-            // 
-            this.SyncMode.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.SyncMode.DataPropertyName = "SyncMode";
-            this.SyncMode.HeaderText = "SyncMode";
-            this.SyncMode.Name = "SyncMode";
-            this.SyncMode.ReadOnly = true;
-            this.SyncMode.Width = 88;
-            // 
-            // UpdatedAt
-            // 
-            this.UpdatedAt.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.UpdatedAt.DataPropertyName = "UpdatedAt";
-            this.UpdatedAt.HeaderText = "Updated At";
-            this.UpdatedAt.Name = "UpdatedAt";
-            this.UpdatedAt.ReadOnly = true;
-            this.UpdatedAt.Width = 92;
-            // 
-            // Directory
-            // 
-            this.Directory.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Directory.DataPropertyName = "Directory";
-            this.Directory.HeaderText = "Directory";
-            this.Directory.Name = "Directory";
-            this.Directory.ReadOnly = true;
+            this.refreshToolStripMenuItem.Name = "refreshToolStripMenuItem";
+            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(113, 22);
+            this.refreshToolStripMenuItem.Text = "Refresh";
+            this.refreshToolStripMenuItem.Click += new System.EventHandler(this.refreshToolStripMenuItem_Click);
             // 
             // btn_Add
             // 
@@ -207,12 +185,28 @@
             this.rtb_ActivityLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.rtb_ActivityLog.ContextMenuStrip = this.rtb_ActivityLog_ContextMenu;
             this.rtb_ActivityLog.Location = new System.Drawing.Point(6, 6);
             this.rtb_ActivityLog.Name = "rtb_ActivityLog";
             this.rtb_ActivityLog.ReadOnly = true;
             this.rtb_ActivityLog.Size = new System.Drawing.Size(666, 440);
             this.rtb_ActivityLog.TabIndex = 0;
             this.rtb_ActivityLog.Text = "";
+            // 
+            // rtb_ActivityLog_ContextMenu
+            // 
+            this.rtb_ActivityLog_ContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.rtb_ActivityLog_ContextMenu_Clear});
+            this.rtb_ActivityLog_ContextMenu.Name = "nofityIconContextMenu";
+            this.rtb_ActivityLog_ContextMenu.Size = new System.Drawing.Size(102, 26);
+            this.rtb_ActivityLog_ContextMenu.Text = "Refresh";
+            // 
+            // rtb_ActivityLog_ContextMenu_Clear
+            // 
+            this.rtb_ActivityLog_ContextMenu_Clear.Name = "rtb_ActivityLog_ContextMenu_Clear";
+            this.rtb_ActivityLog_ContextMenu_Clear.Size = new System.Drawing.Size(101, 22);
+            this.rtb_ActivityLog_ContextMenu_Clear.Text = "Clear";
+            this.rtb_ActivityLog_ContextMenu_Clear.Click += new System.EventHandler(this.rtb_ActivityLog_ContextMenu_Clear_Click);
             // 
             // notifyIcon
             // 
@@ -293,9 +287,53 @@
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            // 
+            // Directory
+            // 
+            this.Directory.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Directory.DataPropertyName = "Directory";
+            this.Directory.HeaderText = "Directory";
+            this.Directory.Name = "Directory";
+            this.Directory.ReadOnly = true;
+            // 
+            // UpdatedAt
+            // 
+            this.UpdatedAt.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.UpdatedAt.DataPropertyName = "UpdatedAt";
+            this.UpdatedAt.HeaderText = "Updated At";
+            this.UpdatedAt.Name = "UpdatedAt";
+            this.UpdatedAt.ReadOnly = true;
+            this.UpdatedAt.Width = 92;
+            // 
+            // SyncMode
+            // 
+            this.SyncMode.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.SyncMode.DataPropertyName = "SyncMode";
+            this.SyncMode.HeaderText = "SyncMode";
+            this.SyncMode.Name = "SyncMode";
+            this.SyncMode.ReadOnly = true;
+            this.SyncMode.Width = 88;
+            // 
+            // Enabled
+            // 
+            this.Enabled.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.Enabled.DataPropertyName = "IsEnabled";
+            this.Enabled.HeaderText = "Enabled";
+            this.Enabled.Name = "Enabled";
+            this.Enabled.ReadOnly = true;
+            this.Enabled.Width = 74;
+            // 
+            // GistId
+            // 
+            this.GistId.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.GistId.DataPropertyName = "GistId";
+            this.GistId.HeaderText = "Gist Id";
+            this.GistId.Name = "GistId";
+            this.GistId.ReadOnly = true;
+            this.GistId.Width = 65;
             // 
             // MainForm
             // 
@@ -310,10 +348,12 @@
             this.Text = "GistSync.NET";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             ((System.ComponentModel.ISupportInitialize)(this.dgv_SyncTasks)).EndInit();
+            this.dgv_SyncTasks_ContextMenu.ResumeLayout(false);
             this.flowLayoutPanel1.ResumeLayout(false);
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
+            this.rtb_ActivityLog_ContextMenu.ResumeLayout(false);
             this.nofityIconContextMenu.ResumeLayout(false);
             this.menuStripMain.ResumeLayout(false);
             this.menuStripMain.PerformLayout();
@@ -334,11 +374,6 @@
         private ContextMenuStrip nofityIconContextMenu;
         private ToolStripMenuItem exitToolStripMenuItem;
         private RichTextBox rtb_ActivityLog;
-        private DataGridViewTextBoxColumn GistId;
-        private DataGridViewTextBoxColumn Enabled;
-        private DataGridViewTextBoxColumn SyncMode;
-        private DataGridViewTextBoxColumn UpdatedAt;
-        private DataGridViewTextBoxColumn Directory;
         private Button btn_SaveToFile;
         private SaveFileDialog saveFileDialog;
         private MenuStrip menuStripMain;
@@ -348,5 +383,15 @@
         private ToolStripMenuItem menuItem_Settings;
         private ToolStripMenuItem helpToolStripMenuItem;
         private ToolStripMenuItem aboutToolStripMenuItem;
+        private ContextMenuStrip dgv_SyncTasks_ContextMenu;
+        private ToolStripMenuItem refreshToolStripMenuItem;
+        private ContextMenuStrip rtb_ActivityLog_ContextMenu;
+        private ToolStripMenuItem rtb_ActivityLog_ContextMenu_Clear;
+        private DataGridViewTextBoxColumn GistId;
+        private DataGridViewTextBoxColumn Enabled;
+        private DataGridViewTextBoxColumn SyncMode;
+        private DataGridViewTextBoxColumn UpdatedAt;
+        private DataGridViewTextBoxColumn Directory;
+        private DataGridViewTextBoxColumn Files;
     }
 }

@@ -6,8 +6,11 @@ namespace GistSync.Core.Services.Contracts
 {
     public interface ISyncTaskDataService
     {
-        IEnumerable<SyncTask> GetAllTasks();
+        Task<IEnumerable<SyncTask>> GetAllTasks();
+        Task<SyncTask> GetTask(int id);
         Task<int> AddOrUpdateTask(SyncTask syncTask);
         Task<int> RemoveTask(int id);
+        Task<int> EnableTask(int id);
+        Task<int> DisableTask(int id);
     }
 }

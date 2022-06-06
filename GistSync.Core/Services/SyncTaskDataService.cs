@@ -2,47 +2,89 @@
 using GistSync.Core.Models;
 using GistSync.Core.Services.Contracts;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GistSync.Core.Services
 {
     public class SyncTaskDataService : ISyncTaskDataService
     {
-        private readonly GistSyncDbContext _dbContext;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
 
-        public SyncTaskDataService(GistSyncDbContext dbContext)
+        public SyncTaskDataService(IServiceScopeFactory serviceScopeFactory)
         {
-            _dbContext = dbContext;
+            _serviceScopeFactory = serviceScopeFactory;
         }
 
         public Task<int> AddOrUpdateTask(SyncTask syncTask)
         {
-            if (_dbContext.SyncTasks.Any(t => t.GistId == syncTask.GistId))
-                _dbContext.SyncTasks.Update(syncTask);
-            else
-                _dbContext.SyncTasks.Add(syncTask);
+            using var scope = _serviceScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<GistSyncDbContext>();
 
-            return _dbContext.SaveChangesAsync();
+            if (dbContext.SyncTasks.Any(t => t.Id == syncTask.Id))
+                dbContext.SyncTasks.Update(syncTask);
+            else
+                dbContext.SyncTasks.Add(syncTask);
+
+            return dbContext.SaveChangesAsync();
         }
 
-        public IEnumerable<SyncTask> GetAllTasks()
+        public Task<IEnumerable<SyncTask>> GetAllTasks()
         {
-            return _dbContext.SyncTasks.Include(t => t.Files).ToList();
+            using var scope = _serviceScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<GistSyncDbContext>();
+
+            return Task.FromResult<IEnumerable<SyncTask>>(dbContext.SyncTasks.Include(t => t.Files).ToList());
+        }
+
+        public async Task<SyncTask> GetTask(int id)
+        {
+            using var scope = _serviceScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<GistSyncDbContext>();
+
+            return (await dbContext.SyncTasks.FindAsync(id))!;
         }
 
         public async Task<int> RemoveTask(int id)
         {
-            var syncTask = await _dbContext.SyncTasks.FirstOrDefaultAsync(t => t.Id == id);
+            using var scope = _serviceScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<GistSyncDbContext>();
 
-            if (syncTask != null)
-            {
-                _dbContext.SyncTasks.Remove(syncTask);
-                return await _dbContext.SaveChangesAsync();
-            }
+            var syncTask = await dbContext.SyncTasks.FirstOrDefaultAsync(t => t.Id == id);
+            if (syncTask == null) return -1;
 
-            return 0;
+            dbContext.SyncTasks.Remove(syncTask);
+            return await dbContext.SaveChangesAsync();
+
+        }
+
+        public async Task<int> EnableTask(int id)
+        {
+            using var scope = _serviceScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<GistSyncDbContext>();
+
+            var syncTask = await dbContext.SyncTasks.FirstOrDefaultAsync(t => t.Id == id);
+            if (syncTask == null) return -1;
+
+            syncTask.IsEnabled = true;
+
+            dbContext.SyncTasks.Update(syncTask);
+            return await dbContext.SaveChangesAsync();
+        }
+
+        public async Task<int> DisableTask(int id)
+        {
+            using var scope = _serviceScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<GistSyncDbContext>();
+
+            var syncTask = await dbContext.SyncTasks.FirstOrDefaultAsync(t => t.Id == id);
+            if (syncTask == null) return -1;
+
+            syncTask.IsEnabled = false;
+
+            dbContext.SyncTasks.Update(syncTask);
+            return await dbContext.SaveChangesAsync();
         }
     }
 }

@@ -6,59 +6,44 @@ using GistSync.Core.Factories.Contracts;
 using GistSync.Core.Models;
 using GistSync.Core.Models.GitHub;
 using GistSync.Core.Services.Contracts;
-using GistSync.Core.Strategies.Contracts;
 
 namespace GistSync.Core.Strategies
 {
     [RegisterForSyncStrategy(SyncModeTypes.TwoWaySync)]
-    public class TwoWaySyncStrategy : ISyncStrategy
+    public class TwoWaySyncStrategy : ActiveSyncStrategy
     {
-        private readonly IFileSystem _fileSystem;
         private readonly IFileWatchFactory _fileWatchFactory;
         private readonly IFileWatcherService _fileWatcherService;
-        private readonly ActiveSyncStrategy _activeSyncStrategy;
-        private readonly IGitHubApiService _gitHubApiService;
-        private readonly ISynchronizedFileAccessService _synchronizedFileAccessService;
-        private readonly IGistWatcherService _gistWatcherService;
-        private readonly IFileChecksumService _fileChecksumService;
-        private readonly ISyncTaskDataService _syncTaskDataService;
-        private readonly INotificationService _notificationService;
         private IDisposable _fileWatchUnsubscriber;
 
         internal TwoWaySyncStrategy(IFileSystem fileSystem,
             IFileWatchFactory fileWatchFactory, IFileWatcherService fileWatcherService,
-            ActiveSyncStrategy activeSyncStrategy, IGitHubApiService gitHubApiService,
+            IGitHubApiService gitHubApiService,
             ISynchronizedFileAccessService synchronizedFileAccessService, IGistWatcherService gistWatcherService,
             IFileChecksumService fileChecksumService, ISyncTaskDataService syncTaskDataService,
-            INotificationService notificationService)
+            INotificationService notificationService, IGistWatchFactory gistWatchFactory) : 
+            base(fileSystem, gistWatchFactory, gistWatcherService, fileChecksumService,
+                syncTaskDataService, synchronizedFileAccessService, gitHubApiService, notificationService)
         {
-            _fileSystem = fileSystem;
             _fileWatchFactory = fileWatchFactory;
             _fileWatcherService = fileWatcherService;
-            _activeSyncStrategy = activeSyncStrategy;
-            _gitHubApiService = gitHubApiService;
-            _synchronizedFileAccessService = synchronizedFileAccessService;
-            _gistWatcherService = gistWatcherService;
-            _fileChecksumService = fileChecksumService;
-            _syncTaskDataService = syncTaskDataService;
-            _notificationService = notificationService;
         }
 
         public TwoWaySyncStrategy(IFileWatchFactory fileWatchFactory, IFileWatcherService fileWatcherService,
-            ActiveSyncStrategy activeSyncStrategy, IGitHubApiService gitHubApiService,
+            IGitHubApiService gitHubApiService,
             ISynchronizedFileAccessService synchronizedFileAccessService, IGistWatcherService gistWatcherService,
             IFileChecksumService fileChecksumService, ISyncTaskDataService syncTaskDataService,
-            INotificationService notificationService)
-            : this(new FileSystem(), fileWatchFactory, fileWatcherService, activeSyncStrategy,
+            INotificationService notificationService, IGistWatchFactory gistWatchFactory)
+            : this(new FileSystem(), fileWatchFactory, fileWatcherService, 
                 gitHubApiService, synchronizedFileAccessService, gistWatcherService, fileChecksumService,
-                syncTaskDataService, notificationService)
+                syncTaskDataService, notificationService, gistWatchFactory)
         {
         }
 
         public void Setup(SyncTask task)
         {
             // Setup for ActiveSync
-            _activeSyncStrategy.Setup(task);
+            base.Setup(task);
 
             // Setup file watch
             foreach (var file in task.Files)
@@ -100,9 +85,9 @@ namespace GistSync.Core.Strategies
             }
         }
 
-        public void Destroy()
+        public override void Destroy()
         {
-            _activeSyncStrategy.Destroy();
+            base.Destroy();
             _fileWatchUnsubscriber.Dispose();
         }
     }

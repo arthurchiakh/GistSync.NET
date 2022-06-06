@@ -4,6 +4,7 @@ using GistSync.NET.Services;
 using GistSync.NET.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using WindowsFormsLifetime;
 
 namespace GistSync.NET
@@ -37,6 +38,9 @@ namespace GistSync.NET
                 services.AddSingleton<INotificationService, WindowsNotificationService>();
             }).ConfigureLogging(logBuilder =>
             {
+                logBuilder.SetMinimumLevel(LogLevel.Information);
+                logBuilder.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
+                logBuilder.AddFilter("Microsoft", LogLevel.Warning);
                 logBuilder.AddActivityLogger();
             });
 
