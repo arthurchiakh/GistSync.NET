@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using GistSync.Core.Models;
 using GistSync.Core.Strategies.Contracts;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GistSync.Core.Strategies
 {
@@ -21,7 +22,7 @@ namespace GistSync.Core.Strategies
             if (!_strategyTypes.TryGetValue(syncModeType, out var classType))
                 throw new InvalidOperationException($"There's no sync strategy register for sync type [{syncModeType.GetType()}.{syncModeType}]");
 
-            return (ISyncStrategy)_serviceProvider.GetService(classType);
+            return (ISyncStrategy)_serviceProvider.GetRequiredService(classType);
         }
     }
 }

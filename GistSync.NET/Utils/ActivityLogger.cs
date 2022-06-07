@@ -27,7 +27,7 @@ namespace GistSync.NET.Utils
         {
             if (!IsEnabled(logLevel)) return;
 
-            var logMessage = $"{logLevel}: {DateTime.Now:yyyy/MM/dd-HH:mm:ss} - {formatter(state, exception)}\n";
+            var logMessage = $"{logLevel} ({DateTime.Now:yyyy/MM/dd-HH:mm:ss}): {formatter(state, exception)}\n";
 
             if (_connectedRichTextBox is null)
                 BufferMessage.Add((logLevel, logMessage)); // Add to buffer if the rich text box is not ready.

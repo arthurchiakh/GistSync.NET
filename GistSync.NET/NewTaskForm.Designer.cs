@@ -151,7 +151,6 @@
             this.cb_SyncMode.Name = "cb_SyncMode";
             this.cb_SyncMode.Size = new System.Drawing.Size(406, 23);
             this.cb_SyncMode.TabIndex = 3;
-            this.cb_SyncMode.SelectedIndexChanged += new System.EventHandler(this.cb_SyncMode_SelectedIndexChanged);
             // 
             // label3
             // 
@@ -201,7 +200,6 @@
             // tb_PersonalAccessToken
             // 
             this.tb_PersonalAccessToken.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.tb_PersonalAccessToken.Enabled = false;
             this.tb_PersonalAccessToken.Location = new System.Drawing.Point(153, 276);
             this.tb_PersonalAccessToken.Name = "tb_PersonalAccessToken";
             this.tb_PersonalAccessToken.Size = new System.Drawing.Size(406, 23);

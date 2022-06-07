@@ -136,19 +136,5 @@ namespace GistSync.NET
                 UseShellExecute = true
             });
         }
-
-        private void cb_SyncMode_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            // Show personal access token 
-            if (cb_SyncMode.SelectedIndex == 0)
-            {
-                tb_PersonalAccessToken.Enabled = false;
-                tb_PersonalAccessToken.Clear();
-            }
-            else
-            {
-                tb_PersonalAccessToken.Enabled = true;
-            }
-        }
     }
 }

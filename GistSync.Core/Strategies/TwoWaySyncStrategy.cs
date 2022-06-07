@@ -6,6 +6,7 @@ using GistSync.Core.Factories.Contracts;
 using GistSync.Core.Models;
 using GistSync.Core.Models.GitHub;
 using GistSync.Core.Services.Contracts;
+using Microsoft.Extensions.Logging;
 
 namespace GistSync.Core.Strategies
 {
@@ -15,28 +16,33 @@ namespace GistSync.Core.Strategies
         private readonly IFileWatchFactory _fileWatchFactory;
         private readonly IFileWatcherService _fileWatcherService;
         private IDisposable _fileWatchUnsubscriber;
+        private readonly ILogger _logger;
 
         internal TwoWaySyncStrategy(IFileSystem fileSystem,
             IFileWatchFactory fileWatchFactory, IFileWatcherService fileWatcherService,
             IGitHubApiService gitHubApiService,
             ISynchronizedFileAccessService synchronizedFileAccessService, IGistWatcherService gistWatcherService,
             IFileChecksumService fileChecksumService, ISyncTaskDataService syncTaskDataService,
-            INotificationService notificationService, IGistWatchFactory gistWatchFactory) : 
+            INotificationService notificationService, IGistWatchFactory gistWatchFactory,
+            ILoggerFactory loggerFactory) : 
             base(fileSystem, gistWatchFactory, gistWatcherService, fileChecksumService,
-                syncTaskDataService, synchronizedFileAccessService, gitHubApiService, notificationService)
+                syncTaskDataService, synchronizedFileAccessService, gitHubApiService, notificationService,
+                loggerFactory)
         {
             _fileWatchFactory = fileWatchFactory;
             _fileWatcherService = fileWatcherService;
+
+            _logger = _loggerFactory.CreateLogger<TwoWaySyncStrategy>();
         }
 
         public TwoWaySyncStrategy(IFileWatchFactory fileWatchFactory, IFileWatcherService fileWatcherService,
             IGitHubApiService gitHubApiService,
             ISynchronizedFileAccessService synchronizedFileAccessService, IGistWatcherService gistWatcherService,
             IFileChecksumService fileChecksumService, ISyncTaskDataService syncTaskDataService,
-            INotificationService notificationService, IGistWatchFactory gistWatchFactory)
+            INotificationService notificationService, IGistWatchFactory gistWatchFactory, ILoggerFactory loggerFactory)
             : this(new FileSystem(), fileWatchFactory, fileWatcherService, 
                 gitHubApiService, synchronizedFileAccessService, gistWatcherService, fileChecksumService,
-                syncTaskDataService, notificationService, gistWatchFactory)
+                syncTaskDataService, notificationService, gistWatchFactory, loggerFactory)
         {
         }
 
@@ -79,6 +85,7 @@ namespace GistSync.Core.Strategies
 
                         // Notification
                         _notificationService.NotifyGistUpdated(task.GistId);
+                        _logger.LogInformation($"Sync Task {task.Id}-{task.GistId} - Gist {task.GistId} has been updated.");
                     });
 
                 _fileWatchUnsubscriber = _fileWatcherService.Subscribe(fileWatch);

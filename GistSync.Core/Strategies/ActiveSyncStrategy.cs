@@ -7,6 +7,8 @@ using GistSync.Core.Factories.Contracts;
 using GistSync.Core.Models;
 using GistSync.Core.Services.Contracts;
 using GistSync.Core.Strategies.Contracts;
+using Microsoft.AspNetCore.Razor.TagHelpers;
+using Microsoft.Extensions.Logging;
 
 namespace GistSync.Core.Strategies
 {
@@ -22,13 +24,15 @@ namespace GistSync.Core.Strategies
         protected readonly ISynchronizedFileAccessService _synchronizedFileAccessService;
         protected readonly IGitHubApiService _gitHubApiService;
         protected readonly INotificationService _notificationService;
+        protected readonly ILoggerFactory _loggerFactory;
         private IDisposable _gistWatchUnsubscriber;
+        private readonly ILogger _logger;
 
         internal ActiveSyncStrategy(IFileSystem fileSystem,
                     IGistWatchFactory gistWatchFactory, IGistWatcherService gistWatcherService,
                     IFileChecksumService fileChecksumService, ISyncTaskDataService syncTaskDataService,
                     ISynchronizedFileAccessService synchronizedFileAccessService, IGitHubApiService gitHubApiService,
-                    INotificationService notificationService)
+                    INotificationService notificationService, ILoggerFactory loggerFactory)
         {
             _gistWatchFactory = gistWatchFactory;
             _gistWatcherService = gistWatcherService;
@@ -37,15 +41,18 @@ namespace GistSync.Core.Strategies
             _synchronizedFileAccessService = synchronizedFileAccessService;
             _gitHubApiService = gitHubApiService;
             _notificationService = notificationService;
+            _loggerFactory = loggerFactory;
             _fileSystem = fileSystem;
+
+            _logger = _loggerFactory.CreateLogger<ActiveSyncStrategy>();
         }
 
         public ActiveSyncStrategy(IGistWatchFactory gistWatchFactory, IGistWatcherService gistWatcherService,
                                     IFileChecksumService fileChecksumService, ISyncTaskDataService syncTaskDataService,
                                     ISynchronizedFileAccessService synchronizedFileAccessService, IGitHubApiService gitHubApiService,
-                                    INotificationService notificationService)
+                                    INotificationService notificationService, ILoggerFactory loggerFactory)
             : this(new FileSystem(), gistWatchFactory, gistWatcherService, fileChecksumService,
-                syncTaskDataService, synchronizedFileAccessService, gitHubApiService, notificationService)
+                syncTaskDataService, synchronizedFileAccessService, gitHubApiService, notificationService, loggerFactory)
         {
         }
 
@@ -94,11 +101,12 @@ namespace GistSync.Core.Strategies
                         await _syncTaskDataService.AddOrUpdateTask(task);
 
                         // Notification
-                        _notificationService.NotifyFileUpdated(targetFilePath);
+                        _notificationService.NotifyFileUpdated(file.FileName);
+                        _logger.LogInformation($"Sync Task {task.Id}-{task.GistId} - {file.FileName} has been updated.");
                     }
                 },
                 task.UpdatedAt,
-                task.GitHubPersonalAccessToken!);
+                task.GitHubPersonalAccessToken);
 
             _gistWatchUnsubscriber = _gistWatcherService.Subscribe(gistWatch);
         }
