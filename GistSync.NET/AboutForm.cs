@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using System.Diagnostics;
+using System.Reflection;
 
 namespace GistSync.NET
 {
@@ -15,6 +8,14 @@ namespace GistSync.NET
         public AboutForm()
         {
             InitializeComponent();
+            lbl_Version.Text = Assembly.GetEntryAssembly()!.GetName().Version!.ToString();
+            lbl_ProjectUrl.Text = Assembly.GetEntryAssembly()!.GetCustomAttributes<AssemblyMetadataAttribute>()
+                .First(a => a.Key == "RepositoryUrl").Value;
+        }
+
+        private void lbl_ProjectUrl_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo { FileName = lbl_ProjectUrl.Text, UseShellExecute = true });
         }
     }
 }

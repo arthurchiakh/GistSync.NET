@@ -39,8 +39,10 @@ namespace GistSync.NET
             }).ConfigureLogging(logBuilder =>
             {
                 logBuilder.SetMinimumLevel(LogLevel.Information);
-                logBuilder.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
                 logBuilder.AddFilter("Microsoft", LogLevel.Warning);
+#if !DEBUG
+                logBuilder.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
+#endif
                 logBuilder.AddActivityLogger();
             });
 
