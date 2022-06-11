@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GistSync.Core.Factories;
+using GistSync.Core.Models;
 using GistSync.Core.Models.GitHub;
 using GistSync.Core.Services;
 using GistSync.Core.Services.Contracts;
@@ -44,7 +45,7 @@ namespace GistSync.Core.Tests
 
             // Create gist watch
             var gistWatchFactory = new GistWatchFactory();
-            var gistWatch = gistWatchFactory.Create(_gistId, (sender, args) => triggerFlag = true, DateTime.UtcNow);
+            var gistWatch = gistWatchFactory.Create(new SyncTask { Id = 1, GistId = _gistId }, (sender, args) => triggerFlag = true, DateTime.UtcNow);
 
             // Add watch
             _gistWatcherService.Subscribe(gistWatch);

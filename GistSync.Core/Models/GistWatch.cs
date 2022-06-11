@@ -4,7 +4,7 @@ namespace GistSync.Core.Models
 {
     public sealed class GistWatch
     {
-
+        public int SyncTaskId { get; set; }
         public string GistId { get; set; }
         public string PersonalAccessToken { get; set; }
         public GitHub.File[] Files { get; set; }

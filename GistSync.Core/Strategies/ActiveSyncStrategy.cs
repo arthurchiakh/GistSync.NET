@@ -60,7 +60,7 @@ namespace GistSync.Core.Strategies
         {
             _syncTask = task;
             // Create watch object
-            var gistWatch = _gistWatchFactory.Create(task.GistId,
+            var gistWatch = _gistWatchFactory.Create(task,
                 async (sender, args) =>
                 {
                     foreach (var file in args.Files.Where(f => task.Files.Any(tf => tf.FileName.Equals(f.FileName))))
@@ -73,36 +73,53 @@ namespace GistSync.Core.Strategies
 
                         var newContentChecksum = await _fileChecksumService.ComputeChecksumByFileContentAsync(newContent);
 
-                        // If file already exists then need to verify checksum.
-                        // Because, the updated time could be changed by updating other files and new comment in the gist
-                        if (_fileSystem.File.Exists(task.Directory))
-                        {
-                            var existingContentChecksum = _fileChecksumService.ComputeChecksumByFilePath(task.Directory);
-                            // No need to update if content is the same
-                            if (newContentChecksum.Equals(existingContentChecksum, StringComparison.OrdinalIgnoreCase))
-                            {
-                                // Update UpdatedAtUtc datetime
-                                task.UpdatedAt = args.UpdatedAtUtc;
-                                await _syncTaskDataService.AddOrUpdateTask(task);
-                                return;
-                            }
-                        }
-
                         var targetFilePath = Path.Combine(task.Directory, file.FileName);
 
-                        // Write to the file
-                        await _synchronizedFileAccessService.SynchronizedWriteStream(targetFilePath, FileMode.Create,
-                            async stream => { await stream.WriteAsync(Encoding.UTF8.GetBytes(newContent)); }
-                        );
+                        // If file is not exists then proceed to create one
+                        if (!_fileSystem.File.Exists(targetFilePath))
+                        {
+                            // Write to the file
+                            await _synchronizedFileAccessService.SynchronizedWriteStream(targetFilePath, FileMode.Create,
+                                async stream => { await stream.WriteAsync(Encoding.UTF8.GetBytes(newContent)); }
+                            );
 
-                        // Update UpdatedAtUtc datetime
-                        task.UpdatedAt = args.UpdatedAtUtc;
-                        task.Files.First(f => f.FileName.Equals(file.FileName)).FileChecksum = newContentChecksum;
-                        await _syncTaskDataService.AddOrUpdateTask(task);
+                            // Update UpdatedAtUtc datetime
+                            task.UpdatedAt = args.UpdatedAtUtc;
+                            task.Files.First(f => f.FileName.Equals(file.FileName)).FileChecksum = newContentChecksum;
+                            await _syncTaskDataService.AddOrUpdateTask(task);
 
-                        // Notification
-                        _notificationService.NotifyFileUpdated(file.FileName);
-                        _logger.LogInformation($"Sync Task {task.Id}-{task.GistId} - {file.FileName} has been updated.");
+                            // Notification
+                            _notificationService.NotifyFileAdded(targetFilePath);
+                            _logger.LogInformation($"Sync Task {task.Id}-{task.GistId} - {file.FileName} has been created.");
+                        }
+                        else
+                        {
+                            // Compare checksum if file exists
+                            var existingContentChecksum = _fileChecksumService.ComputeChecksumByFilePath(targetFilePath);
+
+                            // No need to update if content checksum are the same
+                            if (newContentChecksum.Equals(existingContentChecksum, StringComparison.OrdinalIgnoreCase))
+                            {
+                                task.UpdatedAt = args.UpdatedAtUtc;
+                                await _syncTaskDataService.AddOrUpdateTask(task);
+                            }
+                            else
+                            {
+                                // Write to the file
+                                await _synchronizedFileAccessService.SynchronizedWriteStream(targetFilePath, FileMode.Create,
+                                    async stream => { await stream.WriteAsync(Encoding.UTF8.GetBytes(newContent)); }
+                                );
+
+                                // Update UpdatedAtUtc datetime
+                                task.UpdatedAt = args.UpdatedAtUtc;
+                                task.Files.First(f => f.FileName.Equals(file.FileName)).FileChecksum = newContentChecksum;
+                                await _syncTaskDataService.AddOrUpdateTask(task);
+
+                                // Notification
+                                _notificationService.NotifyFileUpdated(targetFilePath);
+                                _logger.LogInformation($"Sync Task {task.Id}-{task.GistId} - {file.FileName} has been updated.");
+                            }
+                        }
                     }
                 },
                 task.UpdatedAt,

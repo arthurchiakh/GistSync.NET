@@ -8,7 +8,15 @@ namespace GistSync.NET.Services
         public void NotifyFileUpdated(string filePath)
         {
             new ToastContentBuilder()
-                .AddText($"{Path.GetFileName(filePath)} has been updated due to Gist content changed.")
+                .AddText($"{Path.GetFileName(filePath)} has been updated.")
+                .SetProtocolActivation(new Uri($"file://{filePath}"))
+                .Show();
+        }
+
+        public void NotifyFileAdded(string filePath)
+        {
+            new ToastContentBuilder()
+                .AddText($"{Path.GetFileName(filePath)} has been added.")
                 .SetProtocolActivation(new Uri($"file://{filePath}"))
                 .Show();
         }

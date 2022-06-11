@@ -76,7 +76,7 @@ namespace GistSync.Core.Strategies
                         }, task.GitHubPersonalAccessToken!);
 
                         // Prevent back sync occurs
-                        _gistWatcherService.OverrideGistUpdatedAtUtc(updatedGist.Id, updatedGist.UpdatedAt!.Value);
+                        _gistWatcherService.OverrideGistUpdatedAtUtc(task.Id, updatedGist.UpdatedAt!.Value);
 
                         // Update UpdatedAtUtc datetime
                         task.UpdatedAt = updatedGist.UpdatedAt;

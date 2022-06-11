@@ -6,6 +6,6 @@ namespace GistSync.Core.Services.Contracts
     public interface IGistWatcherService
     {
         IDisposable Subscribe(GistWatch gistWatch);
-        void OverrideGistUpdatedAtUtc(string gistId, DateTime dateTimeUtc);
+        void OverrideGistUpdatedAtUtc(int syncTaskId, DateTime dateTimeUtc);
     }
 }

@@ -1,49 +1,39 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using GistSync.Core.Models;
 using GistSync.Core.Services.Contracts;
 using GistSync.Core.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Timer = System.Timers.Timer;
 
 namespace GistSync.Core.Services
 {
-    public class GistWatcherService : IGistWatcherService
+    public class GistWatcherService : IGistWatcherService, IDisposable
     {
         private readonly IGitHubApiService _gitHubApiService;
         private readonly ILogger<GistWatcherService> _logger;
         private readonly IConfiguration _config;
-        private readonly Timer _timer;
         private SemaphoreSlim _semaphoreSlim;
-        private readonly IDictionary<string, GistWatch> _watches;
-        private readonly IDictionary<string, int> _watchCounter;
-        private readonly object _watchesLock;
+        private readonly ConcurrentDictionary<int, GistWatch> _watches;
+        private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly CancellationToken _cancellationToken;
 
-        public GistWatcherService(IGitHubApiService gitHubApiService, IConfiguration config, 
+        public GistWatcherService(IGitHubApiService gitHubApiService, IConfiguration config,
             ILogger<GistWatcherService> logger)
         {
             _gitHubApiService = gitHubApiService;
             _config = config;
             _logger = logger;
-
+            _watches = new ConcurrentDictionary<int, GistWatch>();
+            _cancellationTokenSource = new CancellationTokenSource();
+            _cancellationToken = _cancellationTokenSource.Token;
             _semaphoreSlim = new SemaphoreSlim(_config.GetOrSet("MaxConcurrentGistStatusCheck", 5));
-            _watches = new Dictionary<string, GistWatch>();
-            _watchCounter = new Dictionary<string, int>();
-            _watchesLock = new object();
 
-            _timer = new Timer
-            {
-                Enabled = true,
-                AutoReset = false,
-                Interval = TimeSpan.FromSeconds(_config.GetOrSet("StatusRefreshIntervalSeconds", 300)).TotalMilliseconds
-            };
-            _timer.Elapsed += OnTimerOnElapsed;
-            _timer.Start();
+            // Start polling
+            Task.Factory.StartNew(PollingThread, TaskCreationOptions.LongRunning);
         }
 
         ~GistWatcherService()
@@ -51,31 +41,43 @@ namespace GistSync.Core.Services
             Dispose();
         }
 
-        private void OnTimerOnElapsed(object? sender, ElapsedEventArgs args)
+        public void Dispose()
         {
-            lock (_watchesLock)
-            {
-                Task.WhenAll(_watches.Values.Select(PerformGistWatch)).Wait();
+            if (!_cancellationTokenSource.IsCancellationRequested) _cancellationTokenSource.Cancel();
+        }
 
-                _timer.Interval = TimeSpan.FromSeconds(_config.GetOrSet("StatusRefreshIntervalSeconds", 300)).TotalMilliseconds;
-                _semaphoreSlim = new SemaphoreSlim(_config.GetOrSet("MaxConcurrentGistStatusCheck", 5));
-                _timer.Start();
+        private async void PollingThread()
+        {
+            DateTime? dateTime = null;
+
+            while (true)
+            {
+                _cancellationToken.ThrowIfCancellationRequested();
+                var interval = TimeSpan.FromSeconds(_config.GetOrSet("StatusRefreshIntervalSeconds", 300));
+
+                if (!dateTime.HasValue ||
+                    DateTime.UtcNow >= dateTime.Value + interval
+                    )
+                {
+                    _semaphoreSlim = new SemaphoreSlim(_config.GetOrSet("MaxConcurrentGistStatusCheck", 5));
+                    await Task.WhenAll(_watches.Values.Select(WatchGist));
+                    dateTime = DateTime.UtcNow;
+                }
+
+                Thread.Sleep(TimeSpan.FromSeconds(5));
             }
         }
 
-        private async Task PerformGistWatch(GistWatch gistWatch)
+        private async Task WatchGist(GistWatch gistWatch)
         {
-            await _semaphoreSlim.WaitAsync();
+            await _semaphoreSlim.WaitAsync(_cancellationToken);
 
             try
             {
-                var gist = await _gitHubApiService.Gist(gistWatch.GistId, gistWatch.PersonalAccessToken);
-                if (gistWatch.UpdatedAtUtc != gist.UpdatedAt)
-                {
-                    gistWatch.Files = gist.Files.Select(kv => kv.Value).ToArray();
-                    gistWatch.UpdatedAtUtc = gist.UpdatedAt;
-                    gistWatch.TriggerGistUpdatedEvent();
-                }
+                var gist = await _gitHubApiService.Gist(gistWatch.GistId, gistWatch.PersonalAccessToken, _cancellationToken);
+                gistWatch.Files = gist.Files.Select(kv => kv.Value).ToArray();
+                gistWatch.UpdatedAtUtc = gist.UpdatedAt;
+                gistWatch.TriggerGistUpdatedEvent();
             }
             catch (Exception ex)
             {
@@ -89,64 +91,35 @@ namespace GistSync.Core.Services
 
         public IDisposable Subscribe(GistWatch gistWatch)
         {
-            lock (_watchesLock)
+            // Perform sync right away in another thread.
+            Task.Run(async () =>
             {
-                // Set gist watch
-                if (!_watches.ContainsKey(gistWatch.GistId))
-                    _watches[gistWatch.GistId] = gistWatch;
+                await WatchGist(gistWatch);
+                _watches.TryAdd(gistWatch.SyncTaskId, gistWatch);
+            }, _cancellationToken);
 
-                // Set reference counter
-                _watchCounter[gistWatch.GistId] = _watchCounter.ContainsKey(gistWatch.GistId) ? _watchCounter[gistWatch.GistId]++ : 1;
-                
-                // Perform sync right away in another thread.
-                Task.Run(() => { PerformGistWatch(gistWatch).Wait(); });
-
-                return new Unsubscriber(_watches, _watchCounter, _watchesLock, gistWatch);
-            }
+            return new Unsubscriber(_watches, gistWatch);
         }
 
-        public void OverrideGistUpdatedAtUtc(string gistId, DateTime dateTimeUtc)
+        public void OverrideGistUpdatedAtUtc(int syncTaskId, DateTime dateTimeUtc)
         {
-            lock (_watchesLock)
-                _watches[gistId].UpdatedAtUtc = dateTimeUtc;
-        }
-
-        public void Dispose()
-        {
-            _timer.Stop();
-            _timer.Dispose();
+            _watches[syncTaskId].UpdatedAtUtc = dateTimeUtc;
         }
 
         private class Unsubscriber : IDisposable
         {
-            private readonly IDictionary<string, GistWatch> _watches;
-            private readonly IDictionary<string, int> _watchCounter;
+            private readonly ConcurrentDictionary<int, GistWatch> _watches;
             private readonly GistWatch _gistWatch;
-            private readonly object _watchesLock;
 
-            public Unsubscriber(IDictionary<string, GistWatch> watches, IDictionary<string, int> watchCounter, object watchesLock, GistWatch gistWatch)
+            public Unsubscriber(ConcurrentDictionary<int, GistWatch> watches, GistWatch gistWatch)
             {
                 _watches = watches;
-                _watchCounter = watchCounter;
-                _watchesLock = watchesLock;
                 _gistWatch = gistWatch;
             }
 
             public void Dispose()
             {
-                lock (_watchesLock)
-                    if (_watchCounter.ContainsKey(_gistWatch.GistId))
-                    {
-                        if (_watchCounter[_gistWatch.GistId] > 1)
-                            _watchCounter[_gistWatch.GistId] -= 1; // Minus counter by 1
-                        else
-                        {
-                            _watchCounter.Remove(_gistWatch.GistId);
-                            _watches.Remove(_gistWatch.GistId);
-                        }
-                    }
-                    else // Remove watch directly
-                        _watches.Remove(_gistWatch.GistId);
+                _watches.TryRemove(_gistWatch.SyncTaskId, out _);
             }
         }
     }

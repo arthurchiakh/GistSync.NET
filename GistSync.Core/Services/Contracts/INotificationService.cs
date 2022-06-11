@@ -7,6 +7,13 @@
         /// </summary>
         /// <param name="filePath">Local file path</param>
         void NotifyFileUpdated(string filePath);
+
+        /// <summary>
+        /// File has been added.
+        /// </summary>
+        /// <param name="filePath">Local file path</param>
+        void NotifyFileAdded(string filePath);
+
         /// <summary>
         /// Gist content has been updated to local file content change detected.
         /// </summary>

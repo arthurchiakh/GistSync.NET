@@ -88,7 +88,7 @@
             0,
             0});
             this.tb_StatusRefreshIntervalSeconds.Minimum = new decimal(new int[] {
-            60,
+            5,
             0,
             0,
             0});

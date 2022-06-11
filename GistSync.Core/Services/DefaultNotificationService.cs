@@ -8,6 +8,10 @@ namespace GistSync.Core.Services
         {
         }
 
+        public void NotifyFileAdded(string filePath)
+        {
+        }
+
         public void NotifyGistUpdated(string gistId)
         {
         }

@@ -6,11 +6,12 @@ namespace GistSync.Core.Factories
 {
     public class GistWatchFactory : IGistWatchFactory
     {
-        public GistWatch Create(string gistId, GistUpdatedEventHandler gistUpdatedEvent, DateTime? updatedAtUtc = null, string personalAccessToken = null)
+        public GistWatch Create(SyncTask syncTask, GistUpdatedEventHandler gistUpdatedEvent, DateTime? updatedAtUtc = null, string personalAccessToken = null)
         {
             var gistWatch = new GistWatch
             {
-                GistId = gistId,
+                SyncTaskId = syncTask.Id,
+                GistId = syncTask.GistId,
                 UpdatedAtUtc = updatedAtUtc,
                 PersonalAccessToken = personalAccessToken,
             };
