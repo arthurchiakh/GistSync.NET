@@ -7,7 +7,6 @@ using GistSync.Core.Factories.Contracts;
 using GistSync.Core.Models;
 using GistSync.Core.Services.Contracts;
 using GistSync.Core.Strategies.Contracts;
-using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Logging;
 
 namespace GistSync.Core.Strategies

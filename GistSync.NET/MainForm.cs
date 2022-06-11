@@ -4,6 +4,8 @@ using GistSync.Core.Models;
 using GistSync.Core.Services.Contracts;
 using GistSync.NET.Utils;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Win32;
 
 namespace GistSync.NET
 {
@@ -13,14 +15,16 @@ namespace GistSync.NET
         private readonly IServiceProvider _serviceProvider;
         private readonly ISyncTaskDataService _syncTaskDataService;
         private readonly GistSyncBackgroundService _gistSyncBackgroundService;
+        private readonly IOptions<MainFormOptions> _startUpOptions;
 
         public MainForm(ILogger<MainForm> logger, ISyncTaskDataService syncTaskDataService, IServiceProvider serviceProvider,
-            GistSyncBackgroundService gistSyncBackgroundService)
+            GistSyncBackgroundService gistSyncBackgroundService, IOptions<MainFormOptions> startUpOptions)
         {
             InitializeComponent();
             _syncTaskDataService = syncTaskDataService;
             _serviceProvider = serviceProvider;
             _gistSyncBackgroundService = gistSyncBackgroundService;
+            _startUpOptions = startUpOptions;
             _logger = logger;
         }
 
@@ -28,6 +32,11 @@ namespace GistSync.NET
         {
             ActivityLogger.Connect(SynchronizationContext.Current!, rtb_ActivityLog);
             LoadSyncTasks();
+        }
+
+        protected override void SetVisibleCore(bool value)
+        {
+            base.SetVisibleCore(!_startUpOptions.Value.LaunchOnStartup && value);
         }
 
         #region Tab - Tasks
@@ -189,6 +198,26 @@ namespace GistSync.NET
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             _serviceProvider.GetForm<AboutForm>().ShowDialog(this);
+        }
+
+        private void settingsToolStripMenuItem_Settings_DropDownOpening(object sender, EventArgs e)
+        {
+            const string appName = "GistSync.NET";
+            var rk = Registry.CurrentUser.OpenSubKey
+                (@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
+
+            var isRegistered = rk?.GetValueNames().Contains(appName);
+
+            if (isRegistered.GetValueOrDefault())
+            {
+                menuItem_LaunchOnStartup.CheckState = CheckState.Checked;
+                menuItem_LaunchOnStartup.Click += (_, _) => { rk?.DeleteValue(appName, false); };
+            }
+            else
+            {
+                menuItem_LaunchOnStartup.CheckState = CheckState.Unchecked;
+                menuItem_LaunchOnStartup.Click += (_, _) => { rk.SetValue(appName, $"{Application.ExecutablePath} --startup"); };
+            }
         }
 
         #endregion

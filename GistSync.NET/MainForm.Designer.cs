@@ -31,6 +31,11 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.dgv_SyncTasks = new System.Windows.Forms.DataGridView();
+            this.GistId = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Enabled = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.SyncMode = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.UpdatedAt = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Directory = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dgv_SyncTasks_ContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.refreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.btn_Add = new System.Windows.Forms.Button();
@@ -47,17 +52,13 @@
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.menuStripMain = new System.Windows.Forms.MenuStrip();
-            this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.settingsToolStripMenuItem_File = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItem_Exit = new System.Windows.Forms.ToolStripMenuItem();
-            this.settingsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.settingsToolStripMenuItem_Settings = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItem_Settings = new System.Windows.Forms.ToolStripMenuItem();
-            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.helpToolStripMenuItem_Help = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.Directory = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.UpdatedAt = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.SyncMode = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Enabled = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.GistId = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.menuItem_LaunchOnStartup = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.dgv_SyncTasks)).BeginInit();
             this.dgv_SyncTasks_ContextMenu.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
@@ -94,6 +95,50 @@
             this.dgv_SyncTasks.Size = new System.Drawing.Size(666, 435);
             this.dgv_SyncTasks.TabIndex = 0;
             this.dgv_SyncTasks.CellContextMenuStripNeeded += new System.Windows.Forms.DataGridViewCellContextMenuStripNeededEventHandler(this.dgv_SyncTasks_CellContextMenuStripNeeded);
+            // 
+            // GistId
+            // 
+            this.GistId.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.GistId.DataPropertyName = "GistId";
+            this.GistId.HeaderText = "Gist Id";
+            this.GistId.Name = "GistId";
+            this.GistId.ReadOnly = true;
+            this.GistId.Width = 65;
+            // 
+            // Enabled
+            // 
+            this.Enabled.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.Enabled.DataPropertyName = "IsEnabled";
+            this.Enabled.HeaderText = "Enabled";
+            this.Enabled.Name = "Enabled";
+            this.Enabled.ReadOnly = true;
+            this.Enabled.Width = 74;
+            // 
+            // SyncMode
+            // 
+            this.SyncMode.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.SyncMode.DataPropertyName = "SyncMode";
+            this.SyncMode.HeaderText = "SyncMode";
+            this.SyncMode.Name = "SyncMode";
+            this.SyncMode.ReadOnly = true;
+            this.SyncMode.Width = 88;
+            // 
+            // UpdatedAt
+            // 
+            this.UpdatedAt.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.UpdatedAt.DataPropertyName = "UpdatedAt";
+            this.UpdatedAt.HeaderText = "Updated At";
+            this.UpdatedAt.Name = "UpdatedAt";
+            this.UpdatedAt.ReadOnly = true;
+            this.UpdatedAt.Width = 92;
+            // 
+            // Directory
+            // 
+            this.Directory.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Directory.DataPropertyName = "Directory";
+            this.Directory.HeaderText = "Directory";
+            this.Directory.Name = "Directory";
+            this.Directory.ReadOnly = true;
             // 
             // dgv_SyncTasks_ContextMenu
             // 
@@ -237,103 +282,67 @@
             // menuStripMain
             // 
             this.menuStripMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.settingsToolStripMenuItem,
-            this.settingsToolStripMenuItem1,
-            this.helpToolStripMenuItem});
+            this.settingsToolStripMenuItem_File,
+            this.settingsToolStripMenuItem_Settings,
+            this.helpToolStripMenuItem_Help});
             this.menuStripMain.Location = new System.Drawing.Point(0, 0);
             this.menuStripMain.Name = "menuStripMain";
             this.menuStripMain.Size = new System.Drawing.Size(710, 24);
             this.menuStripMain.TabIndex = 4;
             this.menuStripMain.Text = "menuStrip1";
             // 
-            // settingsToolStripMenuItem
+            // settingsToolStripMenuItem_File
             // 
-            this.settingsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.settingsToolStripMenuItem_File.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuItem_Exit});
-            this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
-            this.settingsToolStripMenuItem.Text = "File";
+            this.settingsToolStripMenuItem_File.Name = "settingsToolStripMenuItem_File";
+            this.settingsToolStripMenuItem_File.Size = new System.Drawing.Size(37, 20);
+            this.settingsToolStripMenuItem_File.Text = "File";
             // 
             // menuItem_Exit
             // 
             this.menuItem_Exit.Name = "menuItem_Exit";
-            this.menuItem_Exit.Size = new System.Drawing.Size(93, 22);
+            this.menuItem_Exit.Size = new System.Drawing.Size(180, 22);
             this.menuItem_Exit.Text = "Exit";
             this.menuItem_Exit.Click += new System.EventHandler(this.menuItem_Exit_Click);
             // 
-            // settingsToolStripMenuItem1
+            // settingsToolStripMenuItem_Settings
             // 
-            this.settingsToolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.menuItem_Settings});
-            this.settingsToolStripMenuItem1.Name = "settingsToolStripMenuItem1";
-            this.settingsToolStripMenuItem1.Size = new System.Drawing.Size(61, 20);
-            this.settingsToolStripMenuItem1.Text = "Settings";
+            this.settingsToolStripMenuItem_Settings.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuItem_Settings,
+            this.menuItem_LaunchOnStartup});
+            this.settingsToolStripMenuItem_Settings.Name = "settingsToolStripMenuItem_Settings";
+            this.settingsToolStripMenuItem_Settings.Size = new System.Drawing.Size(61, 20);
+            this.settingsToolStripMenuItem_Settings.Text = "Settings";
+            this.settingsToolStripMenuItem_Settings.DropDownOpening += new System.EventHandler(this.settingsToolStripMenuItem_Settings_DropDownOpening);
             // 
             // menuItem_Settings
             // 
             this.menuItem_Settings.Name = "menuItem_Settings";
-            this.menuItem_Settings.Size = new System.Drawing.Size(116, 22);
+            this.menuItem_Settings.Size = new System.Drawing.Size(210, 22);
             this.menuItem_Settings.Text = "Settings";
             this.menuItem_Settings.Click += new System.EventHandler(this.menuItem_Settings_Click);
             // 
-            // helpToolStripMenuItem
+            // helpToolStripMenuItem_Help
             // 
-            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.helpToolStripMenuItem_Help.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.aboutToolStripMenuItem});
-            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.helpToolStripMenuItem.Text = "Help";
+            this.helpToolStripMenuItem_Help.Name = "helpToolStripMenuItem_Help";
+            this.helpToolStripMenuItem_Help.Size = new System.Drawing.Size(44, 20);
+            this.helpToolStripMenuItem_Help.Text = "Help";
             // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
-            // Directory
+            // menuItem_LaunchOnStartup
             // 
-            this.Directory.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Directory.DataPropertyName = "Directory";
-            this.Directory.HeaderText = "Directory";
-            this.Directory.Name = "Directory";
-            this.Directory.ReadOnly = true;
-            // 
-            // UpdatedAt
-            // 
-            this.UpdatedAt.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.UpdatedAt.DataPropertyName = "UpdatedAt";
-            this.UpdatedAt.HeaderText = "Updated At";
-            this.UpdatedAt.Name = "UpdatedAt";
-            this.UpdatedAt.ReadOnly = true;
-            this.UpdatedAt.Width = 92;
-            // 
-            // SyncMode
-            // 
-            this.SyncMode.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.SyncMode.DataPropertyName = "SyncMode";
-            this.SyncMode.HeaderText = "SyncMode";
-            this.SyncMode.Name = "SyncMode";
-            this.SyncMode.ReadOnly = true;
-            this.SyncMode.Width = 88;
-            // 
-            // Enabled
-            // 
-            this.Enabled.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.Enabled.DataPropertyName = "IsEnabled";
-            this.Enabled.HeaderText = "Enabled";
-            this.Enabled.Name = "Enabled";
-            this.Enabled.ReadOnly = true;
-            this.Enabled.Width = 74;
-            // 
-            // GistId
-            // 
-            this.GistId.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.GistId.DataPropertyName = "GistId";
-            this.GistId.HeaderText = "Gist Id";
-            this.GistId.Name = "GistId";
-            this.GistId.ReadOnly = true;
-            this.GistId.Width = 65;
+            this.menuItem_LaunchOnStartup.Name = "menuItem_LaunchOnStartup";
+            this.menuItem_LaunchOnStartup.Size = new System.Drawing.Size(210, 22);
+            this.menuItem_LaunchOnStartup.Text = "Launch on system startup";
             // 
             // MainForm
             // 
@@ -377,11 +386,11 @@
         private Button btn_SaveToFile;
         private SaveFileDialog saveFileDialog;
         private MenuStrip menuStripMain;
-        private ToolStripMenuItem settingsToolStripMenuItem;
+        private ToolStripMenuItem settingsToolStripMenuItem_File;
         private ToolStripMenuItem menuItem_Exit;
-        private ToolStripMenuItem settingsToolStripMenuItem1;
+        private ToolStripMenuItem settingsToolStripMenuItem_Settings;
         private ToolStripMenuItem menuItem_Settings;
-        private ToolStripMenuItem helpToolStripMenuItem;
+        private ToolStripMenuItem helpToolStripMenuItem_Help;
         private ToolStripMenuItem aboutToolStripMenuItem;
         private ContextMenuStrip dgv_SyncTasks_ContextMenu;
         private ToolStripMenuItem refreshToolStripMenuItem;
@@ -393,5 +402,6 @@
         private DataGridViewTextBoxColumn UpdatedAt;
         private DataGridViewTextBoxColumn Directory;
         private DataGridViewTextBoxColumn Files;
+        private ToolStripMenuItem menuItem_LaunchOnStartup;
     }
 }

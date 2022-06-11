@@ -17,7 +17,7 @@ namespace GistSync.NET
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
-        async static Task Main()
+        async static Task Main(string[] args)
         {
             var hostBuilder = GistSyncCoreHost.CreateDefaultHostBuilder();
             hostBuilder.UseWindowsFormsLifetime<MainForm>(options =>
@@ -33,6 +33,10 @@ namespace GistSync.NET
                 services.AddForm<NewTaskForm>();
                 services.AddForm<SettingsForm>();
                 services.AddForm<AboutForm>();
+
+                // Options 
+                services.Configure<MainFormOptions>(options =>
+                    options.LaunchOnStartup = args.Length >= 1 && args[0] == "--startup");
 
                 // Override notification
                 services.AddSingleton<INotificationService, WindowsNotificationService>();
