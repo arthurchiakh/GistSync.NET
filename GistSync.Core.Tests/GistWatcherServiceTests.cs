@@ -24,12 +24,12 @@ namespace GistSync.Core.Tests
         {
             // Mock GitHubApiService
             var gitHubApiServiceMock = new Mock<IGitHubApiService>().As<IGitHubApiService>();
-            gitHubApiServiceMock.Setup(s => s.Gist(It.IsAny<string>(), It.IsAny<string>(), CancellationToken.None).Result)
+            gitHubApiServiceMock.Setup(s => s.Gist(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()).Result)
                 .Returns(new Gist
                 {
                     Id = _gistId,
                     UpdatedAt = new Lazy<DateTime>(() => DateTime.UtcNow).Value,
-                    Files = new Dictionary<string, GistSync.Core.Models.GitHub.File>()
+                    Files = new Dictionary<string, File>()
                 });
 
             // Mock Configuration
@@ -50,8 +50,8 @@ namespace GistSync.Core.Tests
             // Add watch
             _gistWatcherService.Subscribe(gistWatch);
 
-            // Give buffer time to let timer to pick the job
-            await Task.Delay(200);
+            // The actual work done in different thread, so we wait a bit for the thread to finish the job
+            await Task.Delay(100);
 
             Assert.IsTrue(triggerFlag);
         }
