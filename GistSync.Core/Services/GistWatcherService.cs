@@ -16,10 +16,13 @@ namespace GistSync.Core.Services
         private readonly IGitHubApiService _gitHubApiService;
         private readonly ILogger<GistWatcherService> _logger;
         private readonly IConfiguration _config;
-        private SemaphoreSlim _semaphoreSlim;
         private readonly ConcurrentDictionary<int, GistWatch> _watches;
-        private readonly CancellationTokenSource _cancellationTokenSource;
-        private readonly CancellationToken _cancellationToken;
+
+        private PeriodicTimer _periodicTimer;
+        private SemaphoreSlim _semaphoreSlim;
+        private CancellationTokenSource _cancellationTokenSource;
+        private CancellationToken _cancellationToken;
+        private Task? _pollingTask;
 
         public GistWatcherService(IGitHubApiService gitHubApiService, IConfiguration config,
             ILogger<GistWatcherService> logger)
@@ -28,12 +31,8 @@ namespace GistSync.Core.Services
             _config = config;
             _logger = logger;
             _watches = new ConcurrentDictionary<int, GistWatch>();
-            _cancellationTokenSource = new CancellationTokenSource();
-            _cancellationToken = _cancellationTokenSource.Token;
-            _semaphoreSlim = new SemaphoreSlim(_config.GetOrSet("MaxConcurrentGistStatusCheck", 5));
 
-            // Start polling
-            Task.Factory.StartNew(PollingThread, TaskCreationOptions.LongRunning);
+            StartPollingTask();
         }
 
         ~GistWatcherService()
@@ -46,25 +45,71 @@ namespace GistSync.Core.Services
             if (!_cancellationTokenSource.IsCancellationRequested) _cancellationTokenSource.Cancel();
         }
 
-        private async void PollingThread()
+        public void ReloadSettings()
         {
-            DateTime? dateTime = null;
+            StopPollingTask();
+            StartPollingTask();
+        }
 
-            while (true)
+        public void OverrideGistUpdatedAtUtc(int syncTaskId, DateTime dateTimeUtc)
+        {
+            _watches[syncTaskId].UpdatedAtUtc = dateTimeUtc;
+        }
+
+        public IDisposable Subscribe(GistWatch gistWatch)
+        {
+            // Perform sync right away in another thread.
+            Task.Run(async () =>
             {
-                _cancellationToken.ThrowIfCancellationRequested();
-                var interval = TimeSpan.FromSeconds(_config.GetOrSet("StatusRefreshIntervalSeconds", 300));
+                await WatchGist(gistWatch);
+                _watches.TryAdd(gistWatch.SyncTaskId, gistWatch);
+            }, _cancellationToken);
 
-                if (!dateTime.HasValue ||
-                    DateTime.UtcNow >= dateTime.Value + interval
-                    )
+            return new Unsubscriber(_watches, gistWatch);
+        }
+
+        private void StartPollingTask()
+        {
+            _logger.LogDebug("Starting polling task.");
+
+            _periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(_config.GetOrSet("StatusRefreshIntervalSeconds", 300)));
+            _semaphoreSlim = new SemaphoreSlim(_config.GetOrSet("MaxConcurrentGistStatusCheck", 5));
+            _cancellationTokenSource = new CancellationTokenSource();
+            _cancellationToken = _cancellationTokenSource.Token;
+            _pollingTask = Task.Factory.StartNew(Polling, _cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+
+            _logger.LogDebug("Started polling task.");
+        }
+
+        private void StopPollingTask()
+        {
+            _logger.LogDebug("Stopping polling task.");
+
+            if (_pollingTask == null || _cancellationTokenSource is not { IsCancellationRequested: false }) return;
+
+            _cancellationTokenSource.Cancel();
+            _pollingTask = null;
+            _periodicTimer.Dispose();
+
+            _logger.LogDebug("Stopped polling task.");
+        }
+
+        private async void Polling()
+        {
+            try
+            {
+                while (await _periodicTimer.WaitForNextTickAsync(_cancellationToken))
                 {
-                    _semaphoreSlim = new SemaphoreSlim(_config.GetOrSet("MaxConcurrentGistStatusCheck", 5));
-                    await Task.WhenAll(_watches.Values.Select(WatchGist));
-                    dateTime = DateTime.UtcNow;
-                }
+                    if (!_watches.Any()) continue; // Skip if no watches
 
-                Thread.Sleep(TimeSpan.FromSeconds(5));
+                    _cancellationToken.ThrowIfCancellationRequested();
+
+                    await Task.WhenAll(_watches.Values.Select(WatchGist));
+                }
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogDebug("Polling has been canceled.");
             }
         }
 
@@ -81,29 +126,12 @@ namespace GistSync.Core.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError("Failed to get Gist info. {0}\n{1}", gistWatch.GistId, ex.Message);
+                _logger.LogError(ex, "Failed to get Gist info. {0}", gistWatch.GistId);
             }
             finally
             {
                 _semaphoreSlim.Release();
             }
-        }
-
-        public IDisposable Subscribe(GistWatch gistWatch)
-        {
-            // Perform sync right away in another thread.
-            Task.Run(async () =>
-            {
-                await WatchGist(gistWatch);
-                _watches.TryAdd(gistWatch.SyncTaskId, gistWatch);
-            }, _cancellationToken);
-
-            return new Unsubscriber(_watches, gistWatch);
-        }
-
-        public void OverrideGistUpdatedAtUtc(int syncTaskId, DateTime dateTimeUtc)
-        {
-            _watches[syncTaskId].UpdatedAtUtc = dateTimeUtc;
         }
 
         private class Unsubscriber : IDisposable
