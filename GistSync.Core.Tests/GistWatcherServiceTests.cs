@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using GistSync.Core.Factories;
 using GistSync.Core.Models;
 using GistSync.Core.Models.GitHub;
 using GistSync.Core.Services;
@@ -16,8 +15,7 @@ namespace GistSync.Core.Tests
 {
     public class GistWatcherServiceTests
     {
-        private string _gistId = "db136774b432d328fcc041ea0ea1f88a";
-        private IGistWatcherService _gistWatcherService;
+        private const string GistId = "db136774b432d328fcc041ea0ea1f88a";
 
         [Test, Timeout(5000)]
         public async Task GistWatcherService_LaterUpdatedDate_ExpectTriggerEvent()
@@ -27,7 +25,7 @@ namespace GistSync.Core.Tests
             gitHubApiServiceMock.Setup(s => s.Gist(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()).Result)
                 .Returns(new Gist
                 {
-                    Id = _gistId,
+                    Id = GistId,
                     UpdatedAt = new Lazy<DateTime>(() => DateTime.UtcNow).Value,
                     Files = new Dictionary<string, File>()
                 });
@@ -38,17 +36,19 @@ namespace GistSync.Core.Tests
             // Mock Logger
             var logger = new Mock<ILogger<GistWatcherService>>().Object;
 
-            // Create service
-            _gistWatcherService = new GistWatcherService(gitHubApiServiceMock.Object, config, logger);
+            // Mock SyncTaskDataServiceM
+            var syncTaskDataServiceMock = new Mock<ISyncTaskDataService>();
+            syncTaskDataServiceMock.Setup(s => s.GetTask(It.IsAny<int>()))
+                .ReturnsAsync(new SyncTask { Id = 1, GistId = "db136774b432d328fcc041ea0ea1f88a" });
+            var syncTaskDataService = syncTaskDataServiceMock.Object;
+
+            // Create GistWatcherService 
+            var gistWatcherService = new GistWatcherService(gitHubApiServiceMock.Object, config, logger, syncTaskDataService);
 
             var triggerFlag = false;
 
-            // Create gist watch
-            var gistWatchFactory = new GistWatchFactory();
-            var gistWatch = gistWatchFactory.Create(new SyncTask { Id = 1, GistId = _gistId }, (sender, args) => triggerFlag = true, DateTime.UtcNow);
-
             // Add watch
-            _gistWatcherService.Subscribe(gistWatch);
+            gistWatcherService.Subscribe(1, _ => triggerFlag = true);
 
             // The actual work done in different thread, so we wait a bit for the thread to finish the job
             await Task.Delay(100);

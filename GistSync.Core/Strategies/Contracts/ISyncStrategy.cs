@@ -1,11 +1,8 @@
-﻿using GistSync.Core.Models;
-
-namespace GistSync.Core.Strategies.Contracts
+﻿namespace GistSync.Core.Strategies.Contracts
 {
     public interface ISyncStrategy
     {
-        void Setup(SyncTask task);
+        void Setup(int syncTaskId);
         void Destroy();
-        string GistId { get; }
     }
 }

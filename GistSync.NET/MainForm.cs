@@ -88,7 +88,7 @@ namespace GistSync.NET
                     var dialogResult = MessageBox.Show("Are you sure to remove?", "Remove Task", MessageBoxButtons.YesNo);
                     if (dialogResult == DialogResult.Yes)
                     {
-                        _gistSyncBackgroundService.StopSyncTaskById(syncTask.Id);
+                        await _gistSyncBackgroundService.StopSyncTask(syncTask.Id);
                         await _syncTaskDataService.RemoveTask(syncTask.Id);
                         LoadSyncTasks();
                     }
@@ -101,7 +101,7 @@ namespace GistSync.NET
                         var dialogResult = MessageBox.Show("Are you sure to disable?", "Disable Task", MessageBoxButtons.YesNo);
                         if (dialogResult == DialogResult.Yes)
                         {
-                            _gistSyncBackgroundService.StopSyncTaskById(syncTask.Id);
+                            await _gistSyncBackgroundService.StopSyncTask(syncTask.Id);
                             await _syncTaskDataService.DisableTask(syncTask.Id);
                             LoadSyncTasks();
                         }
@@ -112,7 +112,7 @@ namespace GistSync.NET
                         var dialogResult = MessageBox.Show("Are you sure to enable?", "Enable Task", MessageBoxButtons.YesNo);
                         if (dialogResult == DialogResult.Yes)
                         {
-                            _gistSyncBackgroundService.StartSyncTask(syncTask);
+                            await _gistSyncBackgroundService.StartSyncTask(syncTask.Id);
                             await _syncTaskDataService.EnableTask(syncTask.Id);
                             LoadSyncTasks();
                         }

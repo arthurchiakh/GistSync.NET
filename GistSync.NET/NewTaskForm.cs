@@ -92,11 +92,11 @@ namespace GistSync.NET
                         IsEnabled = true
                     };
 
-                    var updateResult = await _syncTaskDataService.AddOrUpdateTask(newSyncTask);
+                    var updateResult = await _syncTaskDataService.AddSyncTask(newSyncTask);
 
                     if (updateResult > 0)
                     {
-                        _gistSyncBackgroundService.StartSyncTask(newSyncTask);
+                        await _gistSyncBackgroundService.StartSyncTask(newSyncTask.Id);
                         _newTaskAddedAction();
                         Close();
                     }

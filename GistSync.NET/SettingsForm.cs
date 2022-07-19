@@ -24,7 +24,7 @@ namespace GistSync.NET
             _config.Set("StatusRefreshIntervalSeconds", tb_StatusRefreshIntervalSeconds.Value);
             _config.Set("MaxConcurrentGistStatusCheck", tb_MaxConcurrentGistStatusCheck.Value);
 
-            _gistWatcherService.ReloadSettings();
+            _gistWatcherService.ReloadConfigurationSettings();
 
             Close();
         }

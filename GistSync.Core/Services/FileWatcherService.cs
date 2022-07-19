@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Abstractions;
-using GistSync.Core.Models;
+using System.Linq;
+using System.Threading.Tasks;
 using GistSync.Core.Services.Contracts;
 
 namespace GistSync.Core.Services
@@ -12,18 +13,22 @@ namespace GistSync.Core.Services
     {
         private readonly IFileSystem _fileSystem;
         private readonly IFileChecksumService _fileChecksumService;
-        private readonly IDictionary<string, IFileSystemWatcher> _fileSystemWatchers;
-        private readonly IDictionary<string, IList<FileWatch>> _fileWatches;
+        private readonly ISyncTaskDataService _syncTaskDataService;
+        private readonly ConcurrentDictionary<int, ICollection<IFileSystemWatcher>> _items;
+        private readonly HashSet<string> _updatingFilePath;
 
-        internal FileWatcherService(IFileSystem fileSystem, IFileChecksumService fileChecksumService)
+        internal FileWatcherService(IFileSystem fileSystem, IFileChecksumService fileChecksumService,
+                                    ISyncTaskDataService syncTaskDataService)
         {
             _fileSystem = fileSystem;
             _fileChecksumService = fileChecksumService;
-            _fileSystemWatchers = new Dictionary<string, IFileSystemWatcher>();
-            _fileWatches = new Dictionary<string, IList<FileWatch>>();
+            _syncTaskDataService = syncTaskDataService;
+            _items = new ConcurrentDictionary<int, ICollection<IFileSystemWatcher>>();
+            _updatingFilePath = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         }
 
-        public FileWatcherService(IFileChecksumService fileChecksumService) : this(new FileSystem(), fileChecksumService)
+        public FileWatcherService(IFileChecksumService fileChecksumService, ISyncTaskDataService syncTaskDataService)
+            : this(new FileSystem(), fileChecksumService, syncTaskDataService)
         {
         }
 
@@ -34,83 +39,79 @@ namespace GistSync.Core.Services
 
         public void Dispose()
         {
-            if (_fileSystemWatchers != null && _fileSystemWatchers.Count > 0)
-                foreach (var watcher in _fileSystemWatchers.Values) watcher?.Dispose();
+            if (!_items.Any()) return;
+
+            foreach (var syncTaskId in _items.Keys)
+            {
+                if (!_items.TryRemove(syncTaskId, out var fileSystemWatcherList) ||
+                    !fileSystemWatcherList.Any()) return;
+
+                foreach (var watcher in fileSystemWatcherList) watcher.Dispose();
+            }
         }
 
-        public IDisposable Subscribe([NotNull] FileWatch fileWatch)
+        public async Task<IDisposable> Subscribe(int syncTaskId, Action<string, string> fileModifiedHandler)
         {
-            if (fileWatch == null)
-                throw new ArgumentNullException(nameof(fileWatch)); // GIGO
+            var syncTask = await _syncTaskDataService.GetTask(syncTaskId);
 
-            if (string.IsNullOrWhiteSpace(fileWatch.FilePath))
-                throw new ArgumentNullException(fileWatch.FilePath); // GIGO
+            if (_items.ContainsKey(syncTaskId)) return new Unsubscriber(_items, syncTaskId);
 
-            //if (!_fileSystem.File.Exists(fileWatch.FilePath))
-            //    throw new FileNotFoundException(fileWatch.FilePath);
+            var fileSystemWatcherList = new List<IFileSystemWatcher>();
 
-            // Register file watch
-            if (!_fileWatches.ContainsKey(fileWatch.FilePath))
-                _fileWatches[fileWatch.FilePath] = new List<FileWatch> { fileWatch };
-            else
-                _fileWatches[fileWatch.FilePath].Add(fileWatch);
-
-            // Register file system watcher
-            if (!_fileSystemWatchers.ContainsKey(fileWatch.FilePath))
+            foreach (var file in syncTask.Files)
             {
-                var watcher = _fileSystem.FileSystemWatcher.CreateNew(Path.GetDirectoryName(fileWatch.FilePath));
+                var watcher = _fileSystem.FileSystemWatcher.CreateNew(syncTask.Directory);
                 watcher.NotifyFilter = NotifyFilters.LastWrite;
-                watcher.Filter = Path.GetFileName(fileWatch.FilePath);
+                watcher.Filter = file.FileName;
                 watcher.IncludeSubdirectories = false;
                 watcher.EnableRaisingEvents = true;
 
-                _fileSystemWatchers[fileWatch.FilePath] = watcher;
-                _fileSystemWatchers[fileWatch.FilePath].Changed += OnFileChanged;
-            }
-
-            return new Unsubscriber(_fileSystemWatchers, _fileWatches, fileWatch);
-        }
-
-        private void OnFileChanged(object sender, FileSystemEventArgs args)
-        {
-            var normalizedFilePath = _fileSystem.Path.GetFullPath(args.FullPath);
-
-            // Compute file hash for comparison
-            var newFileHash = _fileChecksumService.ComputeChecksumByFilePath(normalizedFilePath);
-            var modifiedDate = File.GetLastWriteTimeUtc(normalizedFilePath);
-            foreach (var watch in _fileWatches[normalizedFilePath])
-            {
-                if (string.IsNullOrEmpty(watch.Checksum) || // The file not yet download.
-                    !watch.Checksum.Equals(newFileHash, StringComparison.OrdinalIgnoreCase))
+                watcher.Changed += (_, args) =>
                 {
-                    watch.ModifiedDateTimeUtc = modifiedDate;
-                    watch.Checksum = newFileHash;
-                    watch.TriggerFileContentChanged();
-                }
+                    // Skip if any other thread is updating
+                    // To prevent FileSystemWatcher to trigger OnChanged for multiple times.
+                    if (_updatingFilePath.Contains(args.FullPath)) return;
+                    _updatingFilePath.Add(args.FullPath);
+
+                    Task.Run(() =>
+                    {
+                        try
+                        {
+                            fileModifiedHandler(args.FullPath,
+                                _fileChecksumService.ComputeChecksumByFilePath(args.FullPath));
+                        }
+                        finally
+                        {
+                            _updatingFilePath.Remove(args.FullPath);
+                        }
+                    });
+                };
+
+                fileSystemWatcherList.Add(watcher);
             }
+
+            _items.TryAdd(syncTaskId, fileSystemWatcherList);
+
+            return new Unsubscriber(_items, syncTaskId);
         }
 
         private class Unsubscriber : IDisposable
         {
-            private readonly IDictionary<string, IFileSystemWatcher> _fileSystemWatchers;
-            private readonly IDictionary<string, IList<FileWatch>> _fileWatches;
-            private readonly FileWatch _fileWatch;
+            private readonly ConcurrentDictionary<int, ICollection<IFileSystemWatcher>> _items;
+            private readonly int _syncTaskId;
 
-            public Unsubscriber(IDictionary<string, IFileSystemWatcher> fileSystemWatchers, IDictionary<string, IList<FileWatch>> fileWatches,
-                FileWatch fileWatch)
+            public Unsubscriber(ConcurrentDictionary<int, ICollection<IFileSystemWatcher>> items, int syncTaskId)
             {
-                _fileSystemWatchers = fileSystemWatchers;
-                _fileWatch = fileWatch;
-                _fileWatches = fileWatches;
+                _items = items;
+                _syncTaskId = syncTaskId;
             }
 
             public void Dispose()
             {
-                if (_fileSystemWatchers.TryGetValue(_fileWatch.FilePath, out var fileSystemWatcher))
-                    fileSystemWatcher.Dispose();
+                if (!_items.TryRemove(_syncTaskId, out var fileSystemWatcherList) ||
+                    !fileSystemWatcherList.Any()) return;
 
-                _fileSystemWatchers.Remove(_fileWatch.FilePath);
-                _fileWatches.Remove(_fileWatch.FilePath);
+                foreach (var watcher in fileSystemWatcherList) watcher.Dispose();
             }
         }
     }

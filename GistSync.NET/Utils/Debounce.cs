@@ -26,7 +26,8 @@ namespace GistSync.NET.Utils
                 }
                 finally
                 {
-                    DebounceTimers[scopeKey].Dispose();
+                    if (DebounceTimers.TryGetValue(scopeKey, out var timer2))
+                        timer2.Dispose();
                     DebounceTimers.Remove(scopeKey);
                 }
             };

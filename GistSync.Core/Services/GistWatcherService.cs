@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using GistSync.Core.Models;
+using GistSync.Core.Models.GitHub;
 using GistSync.Core.Services.Contracts;
 using GistSync.Core.Utils;
 using Microsoft.Extensions.Configuration;
@@ -11,26 +11,28 @@ using Microsoft.Extensions.Logging;
 
 namespace GistSync.Core.Services
 {
-    public class GistWatcherService : IGistWatcherService, IDisposable
+    public class GistWatcherService : IGistWatcherService
     {
         private readonly IGitHubApiService _gitHubApiService;
         private readonly ILogger<GistWatcherService> _logger;
         private readonly IConfiguration _config;
-        private readonly ConcurrentDictionary<int, GistWatch> _watches;
+        private readonly ConcurrentDictionary<int, Action<Gist>> _items;
+        private readonly ISyncTaskDataService _syncTaskDataService;
 
-        private PeriodicTimer _periodicTimer;
-        private SemaphoreSlim _semaphoreSlim;
-        private CancellationTokenSource _cancellationTokenSource;
+        private PeriodicTimer? _periodicTimer;
+        private SemaphoreSlim? _semaphoreSlim;
+        private CancellationTokenSource? _cancellationTokenSource;
         private CancellationToken _cancellationToken;
         private Task? _pollingTask;
 
         public GistWatcherService(IGitHubApiService gitHubApiService, IConfiguration config,
-            ILogger<GistWatcherService> logger)
+            ILogger<GistWatcherService> logger, ISyncTaskDataService syncTaskDataService)
         {
             _gitHubApiService = gitHubApiService;
             _config = config;
             _logger = logger;
-            _watches = new ConcurrentDictionary<int, GistWatch>();
+            _syncTaskDataService = syncTaskDataService;
+            _items = new ConcurrentDictionary<int, Action<Gist>>();
 
             StartPollingTask();
         }
@@ -42,30 +44,25 @@ namespace GistSync.Core.Services
 
         public void Dispose()
         {
-            if (!_cancellationTokenSource.IsCancellationRequested) _cancellationTokenSource.Cancel();
+            if (_cancellationTokenSource is {IsCancellationRequested: false}) _cancellationTokenSource.Cancel();
         }
 
-        public void ReloadSettings()
+        public void ReloadConfigurationSettings()
         {
             StopPollingTask();
             StartPollingTask();
         }
 
-        public void OverrideGistUpdatedAtUtc(int syncTaskId, DateTime dateTimeUtc)
-        {
-            _watches[syncTaskId].UpdatedAtUtc = dateTimeUtc;
-        }
-
-        public IDisposable Subscribe(GistWatch gistWatch)
+        public IDisposable Subscribe(int syncTaskId, Action<Gist> gistUpdatedHandler)
         {
             // Perform sync right away in another thread.
             Task.Run(async () =>
             {
-                await WatchGist(gistWatch);
-                _watches.TryAdd(gistWatch.SyncTaskId, gistWatch);
+                await WatchGist(syncTaskId, gistUpdatedHandler);
+                _items.TryAdd(syncTaskId, gistUpdatedHandler);
             }, _cancellationToken);
 
-            return new Unsubscriber(_watches, gistWatch);
+            return new Unsubscriber(_items, syncTaskId);
         }
 
         private void StartPollingTask()
@@ -89,7 +86,7 @@ namespace GistSync.Core.Services
 
             _cancellationTokenSource.Cancel();
             _pollingTask = null;
-            _periodicTimer.Dispose();
+            _periodicTimer?.Dispose();
 
             _logger.LogDebug("Stopped polling task.");
         }
@@ -98,13 +95,13 @@ namespace GistSync.Core.Services
         {
             try
             {
-                while (await _periodicTimer.WaitForNextTickAsync(_cancellationToken))
+                while (await _periodicTimer!.WaitForNextTickAsync(_cancellationToken))
                 {
-                    if (!_watches.Any()) continue; // Skip if no watches
+                    if (!_items.Any()) continue; // Skip if no watches
 
                     _cancellationToken.ThrowIfCancellationRequested();
 
-                    await Task.WhenAll(_watches.Values.Select(WatchGist));
+                    await Task.WhenAll(_items.Select(kv => WatchGist(kv.Key, kv.Value)));
                 }
             }
             catch (OperationCanceledException ex)
@@ -113,20 +110,20 @@ namespace GistSync.Core.Services
             }
         }
 
-        private async Task WatchGist(GistWatch gistWatch)
+        private async Task WatchGist(int syncTaskId, Action<Gist> gistUpdatedHandler)
         {
-            await _semaphoreSlim.WaitAsync(_cancellationToken);
+            await _semaphoreSlim!.WaitAsync(_cancellationToken);
+
+            var syncTask = await _syncTaskDataService.GetTask(syncTaskId);
 
             try
             {
-                var gist = await _gitHubApiService.Gist(gistWatch.GistId, gistWatch.PersonalAccessToken, _cancellationToken);
-                gistWatch.Files = gist.Files.Select(kv => kv.Value).ToArray();
-                gistWatch.UpdatedAtUtc = gist.UpdatedAt;
-                gistWatch.TriggerGistUpdatedEvent();
+                var gist = await _gitHubApiService.Gist(syncTask.GistId, syncTask.GitHubPersonalAccessToken!, _cancellationToken);
+                gistUpdatedHandler.Invoke(gist);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get Gist info. {0}", gistWatch.GistId);
+                _logger.LogError(ex, "Failed to get Gist info. {0}", syncTask.GistId);
             }
             finally
             {
@@ -136,18 +133,18 @@ namespace GistSync.Core.Services
 
         private class Unsubscriber : IDisposable
         {
-            private readonly ConcurrentDictionary<int, GistWatch> _watches;
-            private readonly GistWatch _gistWatch;
+            private readonly ConcurrentDictionary<int, Action<Gist>> _items;
+            private readonly int _syncTaskId;
 
-            public Unsubscriber(ConcurrentDictionary<int, GistWatch> watches, GistWatch gistWatch)
+            public Unsubscriber(ConcurrentDictionary<int, Action<Gist>> items, int syncTaskId)
             {
-                _watches = watches;
-                _gistWatch = gistWatch;
+                _items = items;
+                _syncTaskId = syncTaskId;
             }
 
             public void Dispose()
             {
-                _watches.TryRemove(_gistWatch.SyncTaskId, out _);
+                _items.TryRemove(_syncTaskId, out _);
             }
         }
     }

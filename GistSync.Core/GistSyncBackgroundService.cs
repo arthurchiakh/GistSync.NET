@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GistSync.Core.Extensions;
-using GistSync.Core.Models;
 using GistSync.Core.Services.Contracts;
 using GistSync.Core.Strategies;
 using GistSync.Core.Strategies.Contracts;
@@ -35,10 +33,8 @@ namespace GistSync.Core
         /// <param name="stoppingToken">Stopping token</param>
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var syncTasks = await _syncTaskDataService.GetAllTasks();
-
-            foreach (var syncTask in syncTasks.Where(t => t.IsEnabled))
-                StartSyncTask(syncTask);
+            foreach (var syncTaskId in await _syncTaskDataService.GetAllEnabledTaskIds())
+                await StartSyncTask(syncTaskId);
 
             await stoppingToken;
         }
@@ -60,32 +56,35 @@ namespace GistSync.Core
         /// Stop and remove sync task by using sync task id
         /// </summary>
         /// <param name="syncTaskId">SyncTaskId</param>
-        public void StopSyncTaskById(int syncTaskId)
+        public async Task StopSyncTask(int syncTaskId)
         {
-            if (_gistSyncContexts.ContainsKey(syncTaskId))
-            {
-                var syncTask = _gistSyncContexts[syncTaskId];
-                syncTask.Destroy();
-                _gistSyncContexts.Remove(syncTaskId);
-                _logger.LogInformation("Stopped sync task successfully: {0}-{1}", syncTaskId, syncTask.GistId);
-            }
+            if (!_gistSyncContexts.TryGetValue(syncTaskId, out var strategy)) return;
+
+            var syncTask = await _syncTaskDataService.GetTask(syncTaskId);
+
+            strategy.Destroy();
+
+            _gistSyncContexts.Remove(syncTaskId);
+
+            _logger.LogInformation("Stopped sync task successfully: {0}-{1}", syncTaskId, syncTask.GistId);
         }
 
         /// <summary>
-        /// Start sync task
+        /// Start sync task by using sync task id
         /// </summary>
-        /// <param name="syncTask"></param>
-        public void StartSyncTask(SyncTask syncTask)
+        /// <param name="syncTaskId"></param>
+        public async Task StartSyncTask(int syncTaskId)
         {
-            if (!_gistSyncContexts.ContainsKey(syncTask.Id))
-            {
-                var strategy = _syncStrategyProvider.Provide(syncTask.SyncMode);
-                strategy.Setup(syncTask);
+            if (_gistSyncContexts.ContainsKey(syncTaskId)) return;
 
-                _gistSyncContexts[syncTask.Id] = strategy;
+            var syncTask = await _syncTaskDataService.GetTask(syncTaskId);
 
-                _logger.LogInformation("Started sync task successfully: {0}-{1}", syncTask.Id, syncTask.GistId);
-            }
+            var strategy = _syncStrategyProvider.Provide(syncTask.SyncMode);
+            strategy.Setup(syncTask.Id);
+
+            _gistSyncContexts.Add(syncTask.Id, strategy);
+
+            _logger.LogInformation("Started sync task successfully: {0}-{1}", syncTask.Id, syncTask.GistId);
         }
     }
 }

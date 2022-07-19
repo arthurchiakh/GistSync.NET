@@ -17,38 +17,53 @@ namespace GistSync.Core.Services
             _serviceScopeFactory = serviceScopeFactory;
         }
 
-        public Task<int> AddOrUpdateTask(SyncTask syncTask)
+        public async Task<int> AddSyncTask(SyncTask syncTask)
         {
-            using var scope = _serviceScopeFactory.CreateScope();
+            await using var scope = _serviceScopeFactory.CreateAsyncScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<GistSyncDbContext>();
 
-            if (dbContext.SyncTasks.Any(t => t.Id == syncTask.Id))
-                dbContext.SyncTasks.Update(syncTask);
-            else
-                dbContext.SyncTasks.Add(syncTask);
+            dbContext.SyncTasks.Add(syncTask);
 
-            return dbContext.SaveChangesAsync();
+            return await dbContext.SaveChangesAsync();
         }
 
-        public Task<IEnumerable<SyncTask>> GetAllTasks()
+        public async Task<int> UpdateSyncTask(SyncTask syncTask)
         {
-            using var scope = _serviceScopeFactory.CreateScope();
+            await using var scope = _serviceScopeFactory.CreateAsyncScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<GistSyncDbContext>();
+            dbContext.SyncTasks.Update(syncTask);
+
+            return await dbContext.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<SyncTask>> GetAllTasks()
+        {
+            await using var scope = _serviceScopeFactory.CreateAsyncScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<GistSyncDbContext>();
 
-            return Task.FromResult<IEnumerable<SyncTask>>(dbContext.SyncTasks.Include(t => t.Files).ToList());
+            return await dbContext.SyncTasks.Include(t => t.Files).AsNoTracking().ToArrayAsync();
+        }
+
+        public async Task<IEnumerable<int>> GetAllEnabledTaskIds()
+        {
+            await using var scope = _serviceScopeFactory.CreateAsyncScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<GistSyncDbContext>();
+
+            return await dbContext.SyncTasks.Where(t => t.IsEnabled).Select(t => t.Id).ToArrayAsync();
         }
 
         public async Task<SyncTask> GetTask(int id)
         {
-            using var scope = _serviceScopeFactory.CreateScope();
+            await using var scope = _serviceScopeFactory.CreateAsyncScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<GistSyncDbContext>();
 
-            return (await dbContext.SyncTasks.FindAsync(id))!;
+            return await dbContext.SyncTasks.Include(t => t.Files)
+                .SingleAsync(t => t.Id == id);
         }
 
         public async Task<int> RemoveTask(int id)
         {
-            using var scope = _serviceScopeFactory.CreateScope();
+            await using var scope = _serviceScopeFactory.CreateAsyncScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<GistSyncDbContext>();
 
             var syncTask = await dbContext.SyncTasks.FirstOrDefaultAsync(t => t.Id == id);
@@ -61,7 +76,7 @@ namespace GistSync.Core.Services
 
         public async Task<int> EnableTask(int id)
         {
-            using var scope = _serviceScopeFactory.CreateScope();
+            await using var scope = _serviceScopeFactory.CreateAsyncScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<GistSyncDbContext>();
 
             var syncTask = await dbContext.SyncTasks.FirstOrDefaultAsync(t => t.Id == id);
@@ -75,7 +90,7 @@ namespace GistSync.Core.Services
 
         public async Task<int> DisableTask(int id)
         {
-            using var scope = _serviceScopeFactory.CreateScope();
+            await using var scope = _serviceScopeFactory.CreateAsyncScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<GistSyncDbContext>();
 
             var syncTask = await dbContext.SyncTasks.FirstOrDefaultAsync(t => t.Id == id);

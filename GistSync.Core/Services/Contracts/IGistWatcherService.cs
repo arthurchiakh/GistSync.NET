@@ -1,19 +1,20 @@
 ﻿using System;
-using GistSync.Core.Models;
+using GistSync.Core.Models.GitHub;
 
 namespace GistSync.Core.Services.Contracts
 {
-    public interface IGistWatcherService
+    public interface IGistWatcherService : IDisposable
     {
-        IDisposable Subscribe(GistWatch gistWatch);
-
         /// <summary>
-        /// Override Gist updated date to prevent unnecessary sync action after the gist updated by own.
+        /// Subscribe to GistWatcherService with SyncTaskId and GistUpdatedHandler provides updated Gist object.
         /// </summary>
-        /// <param name="syncTaskId">Sync Task Id</param>
-        /// <param name="dateTimeUtc">UTC DateTime</param>
-        void OverrideGistUpdatedAtUtc(int syncTaskId, DateTime dateTimeUtc);
-
-        void ReloadSettings();
+        /// <param name="syncTaskId"></param>
+        /// <param name="gistUpdatedHandler"></param>
+        /// <returns></returns>
+        IDisposable Subscribe(int syncTaskId, Action<Gist> gistUpdatedHandler);
+        /// <summary>
+        /// Reload configuration settings
+        /// </summary>
+        void ReloadConfigurationSettings();
     }
 }
