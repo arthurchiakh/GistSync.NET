@@ -4,9 +4,9 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -22,19 +22,28 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      
+
       # Setup .Net Core SDK
       - name: Setup .NET Core SDK
         uses: actions/setup-dotnet@v1.8.0
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: "6.0.x"
           include-prerelease: true
 
       - name: Restore dependencies
         run: dotnet restore
-        
+
       - name: Build
         run: dotnet build --no-restore
-        
+
       - name: Test
         run: dotnet test --no-build --verbosity normal
+
+      - name: Publish
+        run: dotnet publish .\GistSync.NET\GistSync.NET.csproj -c Release -r win-x64 --sc false -o publish
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: GistSyncNet-Artifact-${{ github.event.pull_request.head.sha }}
+          path: "./publish/**"
