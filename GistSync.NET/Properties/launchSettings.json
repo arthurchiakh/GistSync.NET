@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GistSync.NET": {
+      "commandName": "Project",
+      "commandLineArgs": ""
+    }
+  }
+}

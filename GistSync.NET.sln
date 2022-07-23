@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31606.5
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GistSync.Core", "GistSync.Core\GistSync.Core.csproj", "{2F62C465-2734-45AD-91B9-AD0A3927C5BE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GistSync.Core.Tests", "GistSync.Core.Tests\GistSync.Core.Tests.csproj", "{3894F95A-0EC9-4E38-AF95-7340C4C5A3F4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3AEBD3E6-D464-4BBE-A331-ACF47E7FBD7A}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Installers", "Installers", "{1AAA82B2-CBA0-4155-9768-AC5F10233E2D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GistSync.NET", "GistSync.NET\GistSync.NET.csproj", "{BB427CF5-A207-4181-BC8C-93D55E1FCCCA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2F62C465-2734-45AD-91B9-AD0A3927C5BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F62C465-2734-45AD-91B9-AD0A3927C5BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F62C465-2734-45AD-91B9-AD0A3927C5BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F62C465-2734-45AD-91B9-AD0A3927C5BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3894F95A-0EC9-4E38-AF95-7340C4C5A3F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3894F95A-0EC9-4E38-AF95-7340C4C5A3F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3894F95A-0EC9-4E38-AF95-7340C4C5A3F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3894F95A-0EC9-4E38-AF95-7340C4C5A3F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB427CF5-A207-4181-BC8C-93D55E1FCCCA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB427CF5-A207-4181-BC8C-93D55E1FCCCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB427CF5-A207-4181-BC8C-93D55E1FCCCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB427CF5-A207-4181-BC8C-93D55E1FCCCA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D693CCE1-BFC7-4414-8F7F-757C31E6BCA6}
+	EndGlobalSection
+EndGlobal
